@@ -3,11 +3,20 @@ package github.xCykrix.dynamicLights.util;
 import github.xCykrix.DevkitPlugin;
 import github.xCykrix.dynamicLights.DynamicLights;
 import github.xCykrix.extendable.DevkitFullState;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import dist.xCykrix.shade.dev.dejvokep.boostedyaml.YamlDocument;
 import dist.xCykrix.shade.org.h2.mvstore.MVMap;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -16,11 +25,10 @@ import org.bukkit.block.data.Waterlogged;
 import org.bukkit.block.data.type.Light;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitTask;
 
 public class LightManager extends DevkitFullState {
   private final LightSource source;
-  private final HashMap<UUID, BukkitTask> tasks = new HashMap<>();
+  private final HashMap<UUID, ScheduledTask> tasks = new HashMap<>();
   private final HashMap<String, Location> lastLightLocation = new HashMap<>();
 
   public final MVMap<String, Boolean> toggles;
@@ -28,6 +36,8 @@ public class LightManager extends DevkitFullState {
   private final long refresh;
   private final int distance;
   public final boolean toggle;
+  
+  private final List<Location> lights;
 
   public LightManager(DevkitPlugin plugin) {
     super(plugin);
@@ -42,6 +52,11 @@ public class LightManager extends DevkitFullState {
     this.refresh = config.getLong("update-rate");
     this.distance = config.getInt("light-culling-distance");
     this.toggle = config.getBoolean("default-toggle-state");
+
+    this.lights = Collections.synchronizedList(new LinkedList<>());
+
+    // @NotNull ScheduledTask runAtFixedRate(@NotNull Plugin plugin, @NotNull Consumer<ScheduledTask> task, long initialDelay, long period, @NotNull TimeUnit unit);
+    Bukkit.getAsyncScheduler().runAtFixedRate(plugin, st -> tick(), 0L, refresh, TimeUnit.MILLISECONDS);
   }
 
   @Override
@@ -50,61 +65,64 @@ public class LightManager extends DevkitFullState {
 
   @Override
   public void shutdown() {
-    synchronized (this.tasks) {
-      for (UUID uuid : this.tasks.keySet()) {
-        this.tasks.get(uuid).cancel();
+    clearLight();
+  }
+
+  public void addPlayer(Player player) {}
+
+  public void tick() {
+    if(!plugin.isEnabled()){
+      clearLight();
+      return;
+    }
+
+    Set<Location> actualLocations = new HashSet<>();
+
+    for (Player targetPlayer : Bukkit.getOnlinePlayers()) {
+      Optional<Location> opLocation = run(targetPlayer);
+      if(opLocation.isPresent()) {
+        actualLocations.add(opLocation.get());
       }
-      this.tasks.clear();
+    }
+
+    // Remove all old light except for the one in actualLocations
+    synchronized (this.lights) {
+      for (Location location : this.lights) {
+        if (!actualLocations.contains(location)) {
+          Bukkit.getRegionScheduler().run(plugin, location, st -> this.removeLight(location));
+        }
+      }
+      this.lights.clear();
+      this.lights.addAll(actualLocations);
     }
   }
 
-  public void addPlayer(Player player) {
-    synchronized (this.tasks) {
-      if (this.tasks.containsKey(player.getUniqueId())) {
-        return;
+  public void clearLight() {
+    synchronized (this.lights) {
+      for (Location location : lights) {
+        Bukkit.getRegionScheduler().run(plugin, location, st -> this.removeLight(location));
       }
-      this.tasks.put(player.getUniqueId(),
-          this.plugin.getServer().getScheduler().runTaskTimerAsynchronously(this.plugin, () -> {
-            Material mainHand = getMaterialOrAir(player.getInventory().getItemInMainHand());
-            Material offHand = getMaterialOrAir(player.getInventory().getItemInOffHand());
-            Material helmet = getMaterialOrAir(player.getInventory().getHelmet());
-            Material chestplate = getMaterialOrAir(player.getInventory().getChestplate());
-            Material legging = getMaterialOrAir(player.getInventory().getLeggings());
-            Material boot = getMaterialOrAir(player.getInventory().getBoots());
-            boolean valid = this.valid(player, mainHand, offHand, helmet,
-                chestplate, legging, boot);
-            int lightLevel = 0;
-            if (valid) {
-              lightLevel = source.getLightLevel(mainHand, offHand, helmet,
-                  chestplate, legging, boot);
-            }
-            for (Player targetPlayer : Bukkit.getOnlinePlayers()) {
-              String locationId = player.getUniqueId() + "/" + targetPlayer.getUniqueId();
-              Location lastLocation = this.getLastLocation(locationId);
-              if (!valid) {
-                if (lastLocation != null) {
-                  this.removeLight(targetPlayer, lastLocation);
-                  this.removeLastLocation(locationId);
-                }
-                continue;
-              }
-              Location nextLocation = player.getEyeLocation();
-              if (this.toggles.getOrDefault(targetPlayer.getUniqueId().toString(), this.toggle)) {
-                if (lightLevel > 0 && differentLocations(lastLocation, nextLocation)) {
-                  if (player.getWorld().getName().equals(targetPlayer.getWorld().getName())) {
-                    if (player.getLocation().distance(targetPlayer.getLocation()) <= this.distance) {
-                      this.addLight(targetPlayer, nextLocation, lightLevel);
-                      this.setLastLocation(locationId, nextLocation);
-                    }
-                  }
-                }
-              }
-              if (lastLocation != null && differentLocations(lastLocation, nextLocation)) {
-                this.removeLight(targetPlayer, lastLocation);
-              }
-            }
-          }, 50L, refresh));
     }
+  }
+
+  private Optional<Location> run(Player player) {
+    if(player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR){
+      return Optional.empty();
+    }
+
+    Material mainHand = getMaterialOrAir(player.getInventory().getItemInMainHand());
+    Material offHand = getMaterialOrAir(player.getInventory().getItemInOffHand());
+    Material helmet = getMaterialOrAir(player.getInventory().getHelmet());
+    Material chestplate = getMaterialOrAir(player.getInventory().getChestplate());
+    Material legging = getMaterialOrAir(player.getInventory().getLeggings());
+    Material boot = getMaterialOrAir(player.getInventory().getBoots());
+    int lightLevel = source.getLightLevel(mainHand, offHand, helmet, chestplate, legging, boot);
+    if (lightLevel > 0) {
+      Location eyeLocation = player.getEyeLocation();
+      Bukkit.getRegionScheduler().run(plugin, eyeLocation, st -> this.addLight(player.getEyeLocation(), lightLevel));
+      return Optional.of(eyeLocation);
+    }
+    return Optional.empty();
   }
 
   public void removePlayer(UUID uid) {
@@ -116,15 +134,21 @@ public class LightManager extends DevkitFullState {
     }
   }
 
-  public void addLight(Player player, Location location, int lightLevel) {
+  public void addLight(Location location, int lightLevel) {
     if (lightLevel == 0) {
       return;
     }
-    Light light = (Light) Material.LIGHT.createBlockData();
-    if (location.getWorld() == null) {
-      location.setWorld(player.getWorld());
-    }
     World world = location.getWorld();
+    Block block = world.getBlockAt(location);
+    //Only AIR or LIGHT can be replaced.
+    if(block.getType() != Material.AIR && block.getType() != Material.LIGHT) {
+      return;
+    }
+    if(block.getBlockData() instanceof Light lightData && lightData.getLevel() == lightLevel) {
+      return;
+    }
+
+    Light light = (Light) Material.LIGHT.createBlockData();
     switch (world.getBlockAt(location).getType()) {
       case AIR, CAVE_AIR -> {
         light.setWaterlogged(false);
@@ -137,14 +161,16 @@ public class LightManager extends DevkitFullState {
       default -> {
       }
     }
-    player.sendBlockChange(location, light);
+    lights.add(location);
+    location.getWorld().setBlockData(location, light);
   }
 
-  public void removeLight(Player player, Location location) {
-    if (location.getWorld() == null) {
-      location.setWorld(player.getWorld());
+  public void removeLight(Location location) {
+    Block b = location.getWorld().getBlockAt(location);
+    if(b.getType() == Material.LIGHT) {
+      b.setType(Material.AIR);
     }
-    player.sendBlockChange(location, location.getWorld().getBlockAt(location).getBlockData());
+    lights.remove(location);
   }
 
   public boolean valid(Player player, Material mainHand, Material offHand, Material helmet, Material chestplate,
@@ -183,19 +209,6 @@ public class LightManager extends DevkitFullState {
 
   public void removeLastLocation(String uuid) {
     lastLightLocation.remove(uuid);
-  }
-
-  private boolean differentLocations(Location l1, Location l2) {
-    if (l1 == null || l2 == null) {
-      return true;
-    }
-    if (l1.getWorld() == null || l2.getWorld() == null) {
-      return true;
-    }
-    if (!l1.getWorld().getName().equals(l2.getWorld().getName())) {
-      return true;
-    }
-    return l1.getBlockX() != l2.getBlockX() || l1.getBlockY() != l2.getBlockY() || l1.getBlockZ() != l2.getBlockZ();
   }
 
   private Material getMaterialOrAir(ItemStack item) {
