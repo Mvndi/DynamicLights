@@ -7,15 +7,14 @@ plugins {
 }
 
 group = "github.xCykrix"
-version = "1.3.0-FOR-MC1.20"
+version = "1.3.2"
 
 repositories {
+    mavenLocal()
     mavenCentral()
 
-    // Spigot Repository
-    maven {
-        url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
-    }
+    // Paper
+    maven("https://repo.papermc.io/repository/maven-public/")
 
     // Upstream GitHub Packages
     maven {
@@ -28,8 +27,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:1.21.6-R0.1-SNAPSHOT")
-    implementation("github.xCykrix:spigotdevkit:1.1.0-CAPI1.20") {
+    // compileOnly("org.spigotmc:spigot-api:1.21.6-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+    implementation("github.xCykrix:spigotdevkit:1.1.0") {
         isTransitive = false
     }
 }
@@ -39,8 +39,14 @@ tasks.named<ShadowJar>("shadowJar") {
     archiveClassifier = null;
 }
 
+tasks {
+    assemble {
+        dependsOn(shadowJar)
+    }
+}
+
 // Target Java Build (Java 16 - Minecraft 1.17.x)
-val targetJavaVersion = 16
+val targetJavaVersion = 21
 java {
     val javaVersion = JavaVersion.toVersion(targetJavaVersion)
     sourceCompatibility = javaVersion
