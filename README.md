@@ -1,6 +1,6 @@
 # DynamicLights
 
-Emit Light from Held Items using the 1.17 Light Blocks in Spigot/Paper Servers.
+Emit Light from Held Items using the 1.17 Light Blocks in Paper Servers.
 
 Discord: https://discord.gg/RHJQFPgbke
 

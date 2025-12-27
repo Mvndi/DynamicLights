@@ -4,10 +4,14 @@ plugins {
     id("io.github.goooler.shadow") version "8.1.8"
     id("java")
     id("java-library")
+    id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
 group = "github.xCykrix"
-version = "1.3.2"
+version = "1.3.3"
+description="Dynamic Lights for Minecraft Servers without requiring Modding."
+val mainMinecraftVersion = "1.21.11"
+val supportedMinecraftVersions = "1.21.11 - 1.21.11"
 
 repositories {
     mavenLocal()
@@ -20,16 +24,15 @@ repositories {
     maven {
         url = uri("https://maven.pkg.github.com/xCykrix/SpigotDevkit")
         credentials {
-            username = project.findProperty("GITHUB_ACTOR").toString() ?: System.getenv("GITHUB_ACTOR")
-            password = project.findProperty("GITHUB_TOKEN").toString() ?: System.getenv("GITHUB_TOKEN")
+            username = "" //project.findProperty("GITHUB_ACTOR").toString() ?: System.getenv("GITHUB_ACTOR")
+            password = "" //project.findProperty("GITHUB_TOKEN").toString() ?: System.getenv("GITHUB_TOKEN")
         }
     }
 }
 
 dependencies {
-    // compileOnly("org.spigotmc:spigot-api:1.21.6-R0.1-SNAPSHOT")
-    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
-    implementation("github.xCykrix:spigotdevkit:1.1.0") {
+    compileOnly("io.papermc.paper:paper-api:$mainMinecraftVersion-R0.1-SNAPSHOT")
+    implementation("github.xCykrix:spigotdevkit:1.1.1") {
         isTransitive = false
     }
 }
@@ -43,9 +46,14 @@ tasks {
     assemble {
         dependsOn(shadowJar)
     }
+    runServer {
+        // Configure the Minecraft version for our task.
+        // This is the only required configuration besides applying the plugin.
+        // Your plugin's jar (or shadowJar if present) will be used automatically.
+        minecraftVersion(mainMinecraftVersion)
+    }
 }
 
-// Target Java Build (Java 16 - Minecraft 1.17.x)
 val targetJavaVersion = 21
 java {
     val javaVersion = JavaVersion.toVersion(targetJavaVersion)
