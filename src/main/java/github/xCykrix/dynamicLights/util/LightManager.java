@@ -183,7 +183,9 @@ public class LightManager {
         Light existingLight = (Light) block.getBlockData();
         if (existingLight.getLevel() == lightLevel) {
           return;
+
         }
+        
       }
     
       
