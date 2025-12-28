@@ -4,33 +4,45 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
-import dist.xCykrix.shade.org.apache.commons.lang3.exception.ExceptionUtils;
-import github.xCykrix.DevkitPlugin;
 import github.xCykrix.dynamicLights.DynamicLights;
-import java.io.IOException;
-import java.util.Objects;
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 @CommandAlias("dynamiclights|dynamiclight|dl")
 public class DynamicLightsCommand extends co.aikar.commands.BaseCommand {// extends DevkitSimpleState {
 
-  private static DevkitPlugin plugin;
+  private static JavaPlugin plugin;
 
-  public DynamicLightsCommand(DevkitPlugin plugin) { this.plugin = plugin; }
+  public DynamicLightsCommand(JavaPlugin plugin) { this.plugin = plugin; }
 
   @Subcommand("reload")
   @Description("Reloads the plugin config and data files")
   @CommandPermission("dynamiclights.reload")
   public static void onReload(CommandSender commandSender) {
     try {
-      Objects.requireNonNull(DynamicLights.configuration.getYAMLFile("lights.yml")).reload();
+      // Objects.requireNonNull(DynamicLights.configuration.getYAMLFile("lights.yml")).reload();
+      YamlConfiguration lights = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder(), "lights.yml"));
       DynamicLights.source.initialize();
-      DynamicLights.adventure.get().sender(commandSender).sendMessage(DynamicLights.language.getComponentFromID("reload", true));
-    } catch (IOException | NullPointerException ex) {
-      DynamicLights.adventure.get().sender(commandSender).sendMessage(DynamicLights.language.getComponentFromID("reload-error", true));
+      commandSender.sendMessage(DynamicLights.translate("reload"));
+    } catch (NullPointerException ex) {
+      commandSender.sendMessage(DynamicLights.translate("reload-error"));
       plugin.getLogger().severe("Failed to reload lights.yml.");
-      plugin.getLogger().severe(ExceptionUtils.getStackTrace(ex));
+      plugin.getLogger().severe(getStackTrace(ex));
+    }
+  }
+
+  public static String getStackTrace(Throwable throwable) {
+    if (throwable == null) {
+      return "";
+    } else {
+      StringWriter sw = new StringWriter();
+      throwable.printStackTrace(new PrintWriter(sw, true));
+      return sw.toString();
     }
   }
 
@@ -42,10 +54,10 @@ public class DynamicLightsCommand extends co.aikar.commands.BaseCommand {// exte
       String uuid = player.getUniqueId().toString();
       boolean current = DynamicLights.manager.toggles.getOrDefault(uuid, DynamicLights.manager.toggle);
       if (!current) {
-        DynamicLights.adventure.get().player(player).sendMessage(DynamicLights.language.getComponentFromID("toggle-on", true));
+        player.sendMessage(DynamicLights.translate("toggle-on"));
         DynamicLights.manager.toggles.put(uuid, true);
       } else {
-        DynamicLights.adventure.get().player(player).sendMessage(DynamicLights.language.getComponentFromID("toggle-off", true));
+        player.sendMessage(DynamicLights.translate("toggle-off"));
         DynamicLights.manager.toggles.put(uuid, false);
       }
     }
@@ -59,10 +71,10 @@ public class DynamicLightsCommand extends co.aikar.commands.BaseCommand {// exte
       String uuid = player.getUniqueId().toString();
       boolean current = DynamicLights.manager.locks.getOrDefault(uuid, true);
       if (!current) {
-        DynamicLights.adventure.get().player(player).sendMessage(DynamicLights.language.getComponentFromID("enable-lock", true));
+        player.sendMessage(DynamicLights.translate("enable-lock"));
         DynamicLights.manager.locks.put(uuid, true);
       } else {
-        DynamicLights.adventure.get().player(player).sendMessage(DynamicLights.language.getComponentFromID("disable-lock", true));
+        player.sendMessage(DynamicLights.translate("disable-lock"));
         DynamicLights.manager.locks.put(uuid, false);
       }
     }

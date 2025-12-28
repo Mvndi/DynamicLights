@@ -1,41 +1,46 @@
 package github.xCykrix.dynamicLights.util;
 
-import github.xCykrix.DevkitPlugin;
-import github.xCykrix.dynamicLights.DynamicLights;
-import github.xCykrix.extendable.DevkitFullState;
-import dist.xCykrix.shade.dev.dejvokep.boostedyaml.YamlDocument;
-import dist.xCykrix.shade.dev.dejvokep.boostedyaml.block.Block;
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import org.bukkit.Material;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 
-public class LightSource extends DevkitFullState {
+public class LightSource {
   private final HashMap<Material, Integer> levelOfLights = new HashMap<>();
   private final HashSet<Material> submersibleLights = new HashSet<>();
   private final HashSet<Material> lockedLights = new HashSet<>();
 
-  public LightSource(DevkitPlugin plugin) {
-    super(plugin);
-  }
+  private final JavaPlugin plugin;
 
-  @Override
+  public LightSource(JavaPlugin plugin) { this.plugin = plugin; }
+
+  // @Override
   public void initialize() {
-    YamlDocument lights = DynamicLights.configuration.getYAMLFile("lights.yml");
+    // YamlDocument lights = DynamicLights.configuration.getYAMLFile("lights.yml");
+    YamlConfiguration lights = YamlConfiguration.loadConfiguration(new File(this.plugin.getDataFolder(), "lights.yml"));
+
+
     if (lights == null) {
       throw new RuntimeException("lights.yml is corrupted or contains invalid formatting. Failed to load plugin.");
     }
 
     // Register Light Levels
     this.levelOfLights.clear();
-    Map<Object, Block<?>> levels = lights.getSection("levels").getStoredValue();
-    for (Object material : levels.keySet()) {
+    // Map<Object, Block<?>> levels = lights.getSection("levels").getStoredValue();
+    Map<String, Object> levels = lights.getConfigurationSection("levels").getValues(false);
+    for (Map.Entry<String, Object> entry : levels.entrySet()) {
+      String materialString = entry.getKey();
+      Object levelObject = entry.getValue();
       try {
-        int level = Integer.parseInt(levels.get(material).getStoredValue().toString());
-        this.levelOfLights.put(Material.valueOf((String) material), level);
+        int level = Integer.parseInt(levelObject.toString());
+        Material material = Material.valueOf(materialString);
+        this.levelOfLights.put(material, level);
       } catch (Exception exception) {
-        this.plugin.getLogger().warning("Unable to register level for '" + material + "'. " + exception.getMessage());
+        this.plugin.getLogger().warning("Unable to register level for '" + materialString + "'. " + exception.getMessage());
       }
     }
     this.plugin.getLogger().info("Registered " + this.levelOfLights.size() + " items for Dynamic Lights.");
@@ -47,12 +52,10 @@ public class LightSource extends DevkitFullState {
       try {
         this.submersibleLights.add(Material.valueOf(material));
       } catch (Exception exception) {
-        this.plugin.getLogger()
-            .warning("Unable to register submersible for '" + material + "'. " + exception.getMessage());
+        this.plugin.getLogger().warning("Unable to register submersible for '" + material + "'. " + exception.getMessage());
       }
     }
-    this.plugin.getLogger()
-        .info("Registered " + this.submersibleLights.size() + " items for Dynamic Submersible Lights.");
+    this.plugin.getLogger().info("Registered " + this.submersibleLights.size() + " items for Dynamic Submersible Lights.");
 
     // Register Lockable Lights
     this.lockedLights.clear();
@@ -61,26 +64,22 @@ public class LightSource extends DevkitFullState {
       try {
         this.lockedLights.add(Material.valueOf(material));
       } catch (Exception exception) {
-        this.plugin.getLogger()
-            .warning("Unable to register lockable for '" + material + "'. " + exception.getMessage());
+        this.plugin.getLogger().warning("Unable to register lockable for '" + material + "'. " + exception.getMessage());
       }
     }
     this.plugin.getLogger().info("Registered " + this.lockedLights.size() + " items for Dynamic Locked Lights.");
   }
 
-  @Override
+  // @Override
   public void shutdown() {
     this.lockedLights.clear();
     this.submersibleLights.clear();
     this.levelOfLights.clear();
   }
 
-  public boolean hasLightLevel(Material material) {
-    return levelOfLights.containsKey(material);
-  }
+  public boolean hasLightLevel(Material material) { return levelOfLights.containsKey(material); }
 
-  public Integer getLightLevel(Material mainHand, Material offHand, Material helmet, Material chestplate,
-      Material legging, Material boot) {
+  public Integer getLightLevel(Material mainHand, Material offHand, Material helmet, Material chestplate, Material legging, Material boot) {
     int level = 0;
     level = levelOfLights.getOrDefault(boot, level);
     level = levelOfLights.getOrDefault(legging, level);
@@ -91,8 +90,7 @@ public class LightSource extends DevkitFullState {
     return level;
   }
 
-  public boolean isSubmersible(Material mainHand, Material offHand, Material helmet, Material chestplate,
-      Material legging, Material boot) {
+  public boolean isSubmersible(Material mainHand, Material offHand, Material helmet, Material chestplate, Material legging, Material boot) {
     boolean submersible = false;
     submersible = submersibleLights.contains(boot) ? true : submersible;
     submersible = submersibleLights.contains(legging) ? true : submersible;
@@ -103,7 +101,5 @@ public class LightSource extends DevkitFullState {
     return submersible;
   }
 
-  public boolean isProtectedLight(Material offHand) {
-    return lockedLights.contains(offHand);
-  }
+  public boolean isProtectedLight(Material offHand) { return lockedLights.contains(offHand); }
 }

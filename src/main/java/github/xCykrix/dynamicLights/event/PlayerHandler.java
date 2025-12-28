@@ -1,17 +1,16 @@
 package github.xCykrix.dynamicLights.event;
 
-import github.xCykrix.DevkitPlugin;
 import github.xCykrix.dynamicLights.DynamicLights;
-import github.xCykrix.extendable.DevkitSimpleState;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.plugin.java.JavaPlugin;
 
-public class PlayerHandler extends DevkitSimpleState implements Listener {
-  public PlayerHandler(DevkitPlugin plugin) { super(plugin); }
+public class PlayerHandler implements Listener {
+  public PlayerHandler(JavaPlugin plugin) {}
 
   @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
   public void playerBlockPlaceEvent(BlockPlaceEvent event) {
@@ -24,8 +23,7 @@ public class PlayerHandler extends DevkitSimpleState implements Listener {
         return;
       }
       if (DynamicLights.manager.locks.getOrDefault(event.getPlayer().getUniqueId().toString(), DynamicLights.manager.toggle)) {
-        DynamicLights.adventure.get().player(event.getPlayer())
-            .sendMessage(DynamicLights.language.getComponentFromID("prevent-block-place", true));
+        event.getPlayer().sendMessage(DynamicLights.translate("prevent-block-place"));
         event.setCancelled(true);
       }
     }
