@@ -145,7 +145,7 @@ public class LightManager {
 
   private boolean acceptableBlock(Block block) {
     Material type = block.getType();
-    return type == Material.AIR || type == Material.CAVE_AIR  || type == Material.LIGHT;
+    return type == Material.AIR || type == Material.CAVE_AIR  || type == Material.LIGHT || type == Material.WATER;
     // TODO reenable water lights
     // || type == Material.WATER;
   }
@@ -175,7 +175,7 @@ public class LightManager {
     
     // Only AIR or LIGHT or WATER can be replaced.
     block = getClosestAcceptableBlock(block);
-    
+
     if (block == null) {
         return;
       }
@@ -212,7 +212,13 @@ public class LightManager {
   public void removeLight(Location location) {
     Block b = location.getWorld().getBlockAt(location);
     if (b.getType() == Material.LIGHT) {
-      b.setType(Material.AIR);
+      if (b.getBlockData() instanceof Light light) {
+        if (light.isWaterlogged()) {
+          b.setType(Material.WATER);
+        }else{
+          b.setType(Material.AIR);
+        }
+      }
     }
     lights.remove(location);
   }
