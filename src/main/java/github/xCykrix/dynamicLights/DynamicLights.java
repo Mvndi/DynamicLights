@@ -1,7 +1,6 @@
 package github.xCykrix.dynamicLights;
 
 import co.aikar.commands.PaperCommandManager;
-import github.xCykrix.DevkitPlugin;
 import github.xCykrix.dynamicLights.command.DynamicLightsCommand;
 import github.xCykrix.dynamicLights.event.PlayerHandler;
 import github.xCykrix.dynamicLights.util.LightManager;
@@ -10,17 +9,17 @@ import github.xCykrix.helper.LanguageFile;
 import github.xCykrix.plugin.AdventurePlugin;
 import github.xCykrix.plugin.CommandPlugin;
 import github.xCykrix.plugin.ConfigurationPlugin;
-import github.xCykrix.plugin.H2MVStorePlugin;
-import github.xCykrix.records.Resource;
+import org.apache.maven.model.Resource;
+import org.bukkit.plugin.java.JavaPlugin;
 
-public final class DynamicLights extends DevkitPlugin {
+public final class DynamicLights extends JavaPlugin {
   // Core APIs.
   public static ConfigurationPlugin configuration;
   public static AdventurePlugin adventure;
   public static CommandPlugin command;
 
   // Third Party APIs.
-  public static H2MVStorePlugin h2;
+  // public static H2MVStorePlugin h2;
 
   // Internal APIs.
   public static LanguageFile language;
@@ -32,7 +31,7 @@ public final class DynamicLights extends DevkitPlugin {
     configuration = this.register(new ConfigurationPlugin(this));
     adventure = this.register(new AdventurePlugin(this));
     command = this.register(new CommandPlugin(this));
-    h2 = this.register(new H2MVStorePlugin(this));
+    // h2 = this.register(new H2MVStorePlugin(this));
   }
 
   @Override
@@ -56,7 +55,7 @@ public final class DynamicLights extends DevkitPlugin {
     manager.registerCommand(new DynamicLightsCommand(this));
   }
 
-  @Override
+  // @Override
   public void shutdown() {
     manager.shutdown();
     source.shutdown();

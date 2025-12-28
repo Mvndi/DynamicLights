@@ -1,10 +1,6 @@
 package github.xCykrix.dynamicLights.util;
 
-import dist.xCykrix.shade.dev.dejvokep.boostedyaml.YamlDocument;
-import dist.xCykrix.shade.org.h2.mvstore.MVMap;
-import github.xCykrix.DevkitPlugin;
 import github.xCykrix.dynamicLights.DynamicLights;
-import github.xCykrix.extendable.DevkitFullState;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,6 +10,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -25,31 +23,37 @@ import org.bukkit.block.data.Waterlogged;
 import org.bukkit.block.data.type.Light;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 
-public class LightManager extends DevkitFullState {
+public class LightManager {
   private final LightSource source;
   private final HashMap<UUID, ScheduledTask> tasks = new HashMap<>();
   private final HashMap<String, Location> lastLightLocation = new HashMap<>();
 
-  public final MVMap<String, Boolean> toggles;
-  public final MVMap<String, Boolean> locks;
+  public final ConcurrentMap<String, Boolean> toggles;
+  public final ConcurrentMap<String, Boolean> locks;
   private final long refresh;
   public final boolean toggle;
 
+  private JavaPlugin plugin;
+
   private final List<Location> lights;
 
-  public LightManager(DevkitPlugin plugin) {
-    super(plugin);
-    YamlDocument config = DynamicLights.configuration.getYAMLFile("config.yml");
-    if (config == null) {
-      throw new RuntimeException("config.yml is corrupted or contains invalid formatting. Failed to load plugin.");
-    }
+  public LightManager(JavaPlugin plugin) {
+    this.plugin = plugin;
+    // YamlDocument config = DynamicLights.configuration.getYAMLFile("config.yml");
+    // if (config == null) {
+    // throw new RuntimeException("config.yml is corrupted or contains invalid formatting. Failed to load plugin.");
+    // }
 
     this.source = DynamicLights.source;
-    this.toggles = DynamicLights.h2.get().openMap("lightToggleStatus");
-    this.locks = DynamicLights.h2.get().openMap("lightLockStatus");
-    this.refresh = config.getLong("update-rate");
-    this.toggle = config.getBoolean("default-toggle-state");
+    // TODO reenable file storing of toggles & locks
+    // this.toggles = DynamicLights.h2.get().openMap("lightToggleStatus");
+    // this.locks = DynamicLights.h2.get().openMap("lightLockStatus");
+    this.toggles = new ConcurrentHashMap<>();
+    this.locks = new ConcurrentHashMap<>();
+    this.refresh = plugin.getConfig().getLong("update-rate");
+    this.toggle = plugin.getConfig().getBoolean("default-toggle-state");
 
     this.lights = Collections.synchronizedList(new LinkedList<>());
 
@@ -58,10 +62,8 @@ public class LightManager extends DevkitFullState {
     Bukkit.getAsyncScheduler().runAtFixedRate(plugin, st -> tick(), 0L, refresh, TimeUnit.MILLISECONDS);
   }
 
-  @Override
-  public void initialize() {}
 
-  @Override
+  // @Override
   public void shutdown() { clearLight(); }
 
 

@@ -4,20 +4,21 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
-import dist.xCykrix.shade.org.apache.commons.lang3.exception.ExceptionUtils;
-import github.xCykrix.DevkitPlugin;
 import github.xCykrix.dynamicLights.DynamicLights;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Objects;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 @CommandAlias("dynamiclights|dynamiclight|dl")
 public class DynamicLightsCommand extends co.aikar.commands.BaseCommand {// extends DevkitSimpleState {
 
-  private static DevkitPlugin plugin;
+  private static JavaPlugin plugin;
 
-  public DynamicLightsCommand(DevkitPlugin plugin) { this.plugin = plugin; }
+  public DynamicLightsCommand(JavaPlugin plugin) { this.plugin = plugin; }
 
   @Subcommand("reload")
   @Description("Reloads the plugin config and data files")
@@ -30,7 +31,17 @@ public class DynamicLightsCommand extends co.aikar.commands.BaseCommand {// exte
     } catch (IOException | NullPointerException ex) {
       DynamicLights.adventure.get().sender(commandSender).sendMessage(DynamicLights.language.getComponentFromID("reload-error", true));
       plugin.getLogger().severe("Failed to reload lights.yml.");
-      plugin.getLogger().severe(ExceptionUtils.getStackTrace(ex));
+      plugin.getLogger().severe(getStackTrace(ex));
+    }
+  }
+
+  public static String getStackTrace(Throwable throwable) {
+    if (throwable == null) {
+      return "";
+    } else {
+      StringWriter sw = new StringWriter();
+      throwable.printStackTrace(new PrintWriter(sw, true));
+      return sw.toString();
     }
   }
 
