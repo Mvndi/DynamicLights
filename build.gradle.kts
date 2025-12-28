@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "github.xCykrix"
-version = "1.3.3"
+version = "1.3.4"
 description="Dynamic Lights for Minecraft Servers without requiring Modding."
 val mainMinecraftVersion = "1.21.11"
 val supportedMinecraftVersions = "1.21.11 - 1.21.11"
@@ -32,9 +32,10 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:$mainMinecraftVersion-R0.1-SNAPSHOT")
-    implementation("github.xCykrix:spigotdevkit:1.1.1") {
+    implementation("github.xCykrix:spigotdevkit:1.1.2") {
         isTransitive = false
     }
+    implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
 }
 
 // Shadow Task

@@ -1,9 +1,6 @@
 # Update Rate: Controls how often the DynamicLights will tick. Defaults to 5 (4 times per second). Player heavy servers may require less often.
 update-rate: 5
 
-# Light Culling Distance: Controls how far away you should see another players DynamicLight.
-light-culling-distance: 64
-
 # Default Toggle State: Controls if Dynamic Lighting is enabled by default.
 default-toggle-state: true
 

@@ -1,7 +1,8 @@
 package github.xCykrix.dynamicLights;
 
+import co.aikar.commands.PaperCommandManager;
 import github.xCykrix.DevkitPlugin;
-import github.xCykrix.dynamicLights.command.BaseCommand;
+import github.xCykrix.dynamicLights.command.DynamicLightsCommand;
 import github.xCykrix.dynamicLights.event.PlayerHandler;
 import github.xCykrix.dynamicLights.util.LightManager;
 import github.xCykrix.dynamicLights.util.LightSource;
@@ -37,10 +38,8 @@ public final class DynamicLights extends DevkitPlugin {
   @Override
   public void initialize() {
     // Register Configurations
-    configuration
-        .register(new Resource("config.yml", null, this.getResource("config.yml")))
-        .register(new Resource("lights.yml", null, this.getResource("lights.yml")))
-        .registerLanguageFile(this.getResource("language.yml"));
+    configuration.register(new Resource("config.yml", null, this.getResource("config.yml")))
+        .register(new Resource("lights.yml", null, this.getResource("lights.yml"))).registerLanguageFile(this.getResource("language.yml"));
     language = configuration.getLanguageFile();
 
     // Register Internal APIs.
@@ -53,7 +52,8 @@ public final class DynamicLights extends DevkitPlugin {
     this.getServer().getPluginManager().registerEvents(new PlayerHandler(this), this);
 
     // Register Commands
-    BaseCommand.getOrCreate(this).generate(command);
+    PaperCommandManager manager = new PaperCommandManager(this);
+    manager.registerCommand(new DynamicLightsCommand(this));
   }
 
   @Override

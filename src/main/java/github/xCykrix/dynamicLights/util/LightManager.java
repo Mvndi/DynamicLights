@@ -1,18 +1,18 @@
 package github.xCykrix.dynamicLights.util;
 
+import dist.xCykrix.shade.dev.dejvokep.boostedyaml.YamlDocument;
+import dist.xCykrix.shade.org.h2.mvstore.MVMap;
 import github.xCykrix.DevkitPlugin;
 import github.xCykrix.dynamicLights.DynamicLights;
 import github.xCykrix.extendable.DevkitFullState;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
-import dist.xCykrix.shade.dev.dejvokep.boostedyaml.YamlDocument;
-import dist.xCykrix.shade.org.h2.mvstore.MVMap;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.bukkit.Bukkit;
@@ -34,9 +34,8 @@ public class LightManager extends DevkitFullState {
   public final MVMap<String, Boolean> toggles;
   public final MVMap<String, Boolean> locks;
   private final long refresh;
-  private final int distance;
   public final boolean toggle;
-  
+
   private final List<Location> lights;
 
   public LightManager(DevkitPlugin plugin) {
@@ -50,37 +49,34 @@ public class LightManager extends DevkitFullState {
     this.toggles = DynamicLights.h2.get().openMap("lightToggleStatus");
     this.locks = DynamicLights.h2.get().openMap("lightLockStatus");
     this.refresh = config.getLong("update-rate");
-    this.distance = config.getInt("light-culling-distance");
     this.toggle = config.getBoolean("default-toggle-state");
 
     this.lights = Collections.synchronizedList(new LinkedList<>());
 
-    // @NotNull ScheduledTask runAtFixedRate(@NotNull Plugin plugin, @NotNull Consumer<ScheduledTask> task, long initialDelay, long period, @NotNull TimeUnit unit);
+    // @NotNull ScheduledTask runAtFixedRate(@NotNull Plugin plugin, @NotNull Consumer<ScheduledTask> task, long initialDelay, long period,
+    // @NotNull TimeUnit unit);
     Bukkit.getAsyncScheduler().runAtFixedRate(plugin, st -> tick(), 0L, refresh, TimeUnit.MILLISECONDS);
   }
 
   @Override
-  public void initialize() {
-  }
+  public void initialize() {}
 
   @Override
-  public void shutdown() {
-    clearLight();
-  }
+  public void shutdown() { clearLight(); }
 
-  public void addPlayer(Player player) {}
 
   public void tick() {
-    if(!plugin.isEnabled()){
+    if (!plugin.isEnabled()) {
       clearLight();
       return;
     }
 
     Set<Location> actualLocations = new HashSet<>();
 
+    // For each online player, check if we should add a light.
     for (Player targetPlayer : Bukkit.getOnlinePlayers()) {
       Optional<Location> opLocation = run(targetPlayer);
-      if(opLocation.isPresent()) {
+      if (opLocation.isPresent()) {
         actualLocations.add(opLocation.get());
       }
     }
@@ -106,7 +102,10 @@ public class LightManager extends DevkitFullState {
   }
 
   private Optional<Location> run(Player player) {
-    if(player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR){
+    if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
+      return Optional.empty();
+    }
+    if (!(this.toggles.getOrDefault(player.getUniqueId().toString(), this.toggle))) {
       return Optional.empty();
     }
 
@@ -140,11 +139,11 @@ public class LightManager extends DevkitFullState {
     }
     World world = location.getWorld();
     Block block = world.getBlockAt(location);
-    //Only AIR or LIGHT can be replaced.
-    if(block.getType() != Material.AIR && block.getType() != Material.LIGHT) {
+    // Only AIR or LIGHT or WATER can be replaced.
+    if (block.getType() != Material.AIR && block.getType() != Material.LIGHT && block.getType() != Material.WATER) {
       return;
     }
-    if(block.getBlockData() instanceof Light lightData && lightData.getLevel() == lightLevel) {
+    if (block.getBlockData() instanceof Light lightData && lightData.getLevel() == lightLevel) {
       return;
     }
 
@@ -167,14 +166,14 @@ public class LightManager extends DevkitFullState {
 
   public void removeLight(Location location) {
     Block b = location.getWorld().getBlockAt(location);
-    if(b.getType() == Material.LIGHT) {
+    if (b.getType() == Material.LIGHT) {
       b.setType(Material.AIR);
     }
     lights.remove(location);
   }
 
-  public boolean valid(Player player, Material mainHand, Material offHand, Material helmet, Material chestplate,
-      Material legging, Material boot) {
+  public boolean valid(Player player, Material mainHand, Material offHand, Material helmet, Material chestplate, Material legging,
+      Material boot) {
     boolean hasLightLevel = false;
     hasLightLevel = source.hasLightLevel(mainHand) ? true : hasLightLevel;
     hasLightLevel = source.hasLightLevel(offHand) ? true : hasLightLevel;
@@ -190,7 +189,7 @@ public class LightManager extends DevkitFullState {
     if (currentLocation.getType() == Material.AIR || currentLocation.getType() == Material.CAVE_AIR) {
       return true;
     }
-    if (currentLocation instanceof Waterlogged && ((Waterlogged) currentLocation).isWaterlogged()) {
+    if (currentLocation instanceof Waterlogged currentLocationWaterlogged && currentLocationWaterlogged.isWaterlogged()) {
       return false;
     }
     if (currentLocation.getType() == Material.WATER) {
@@ -199,17 +198,11 @@ public class LightManager extends DevkitFullState {
     return false;
   }
 
-  public Location getLastLocation(String uuid) {
-    return lastLightLocation.getOrDefault(uuid, null);
-  }
+  public Location getLastLocation(String uuid) { return lastLightLocation.getOrDefault(uuid, null); }
 
-  public void setLastLocation(String uuid, Location location) {
-    lastLightLocation.put(uuid, location);
-  }
+  public void setLastLocation(String uuid, Location location) { lastLightLocation.put(uuid, location); }
 
-  public void removeLastLocation(String uuid) {
-    lastLightLocation.remove(uuid);
-  }
+  public void removeLastLocation(String uuid) { lastLightLocation.remove(uuid); }
 
   private Material getMaterialOrAir(ItemStack item) {
     if (item == null)
