@@ -15,6 +15,7 @@ levels:
   OCHRE_FROGLIGHT: 15
   PEARLESCENT_FROGLIGHT: 15
   VERDANT_FROGLIGHT: 15
+  JACK_O_LANTERN: 15
 
 # String List of Submersible Materials
 submersibles:
@@ -24,6 +25,9 @@ submersibles:
   - "OCHRE_FROGLIGHT"
   - "PEARLESCENT_FROGLIGHT"
   - "VERDANT_FROGLIGHT"
+  - "JACK_O_LANTERN"
+
+
 
 # String List of Lockable Materials
 lockables:
