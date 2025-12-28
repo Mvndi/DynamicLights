@@ -127,7 +127,7 @@ public class LightManager {
     if (lightLevel > 0) {
       // plugin.getLogger().info("lightLevel > 0 " + lightLevel);
       Location eyeLocation = player.getEyeLocation();
-      Bukkit.getRegionScheduler().run(plugin, eyeLocation, st -> this.addLight(player.getEyeLocation(), lightLevel));
+      Bukkit.getRegionScheduler().run(plugin, eyeLocation, st -> this.addLight(eyeLocation, lightLevel));
       return Optional.of(eyeLocation);
     }
     // plugin.getLogger().info("lightLevel <= 0");
@@ -155,6 +155,7 @@ public class LightManager {
 
     for (Block relativeBlock : possibleLocation) {
       if (acceptableBlock(relativeBlock)) {
+        // if(relativeBlock.getType() != Material.LIGHT)
         return relativeBlock;
       }
     }
@@ -171,9 +172,12 @@ public class LightManager {
 
     // Only AIR or LIGHT or WATER can be replaced.
     block = getClosestAcceptableBlock(block);
+    
     if (block == null) {
       return;
     }
+
+    location = block.getLocation();
 
     Light light = (Light) Material.LIGHT.createBlockData();
     switch (block.getType()) {
