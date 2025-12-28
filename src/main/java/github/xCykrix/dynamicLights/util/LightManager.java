@@ -145,23 +145,18 @@ public class LightManager {
 
   private boolean acceptableBlock(Block block) {
     Material type = block.getType();
-    if (type == Material.AIR || type == Material.CAVE_AIR || type == Material.WATER) {
-      return true;
-    }
-    if (block.getBlockData() instanceof Waterlogged waterlogged && waterlogged.isWaterlogged()) {
-      return true;
-    }
-    return false;
+    return type == Material.AIR || type == Material.CAVE_AIR || type == Material.WATER || type == Material.LIGHT;
   }
 
   private Block getClosestAcceptableBlock(Block block) {
-    List<Block> possibleLocation = List.of(block,block.getRelative(BlockFace.NORTH), block.getRelative(BlockFace.EAST), block.getRelative(BlockFace.SOUTH),
-        block.getRelative(BlockFace.WEST), block.getRelative(BlockFace.UP), block.getRelative(BlockFace.DOWN));
+    List<Block> possibleLocation = List.of(block, block.getRelative(BlockFace.NORTH), block.getRelative(BlockFace.EAST),
+        block.getRelative(BlockFace.SOUTH), block.getRelative(BlockFace.WEST), block.getRelative(BlockFace.UP),
+        block.getRelative(BlockFace.DOWN));
 
     for (Block relativeBlock : possibleLocation) {
-        if (acceptableBlock(relativeBlock)) {
-            return relativeBlock;
-        }
+      if (acceptableBlock(relativeBlock)) {
+        return relativeBlock;
+      }
     }
     return null;
   }
@@ -173,12 +168,11 @@ public class LightManager {
     World world = location.getWorld();
     Block block = world.getBlockAt(location);
 
-    
 
     // Only AIR or LIGHT or WATER can be replaced.
     block = getClosestAcceptableBlock(block);
-    if(block == null){
-        return;
+    if (block == null) {
+      return;
     }
 
     Light light = (Light) Material.LIGHT.createBlockData();
