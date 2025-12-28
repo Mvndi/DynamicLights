@@ -23,7 +23,7 @@ public class PlayerHandler implements Listener {
         return;
       }
       if (DynamicLights.manager.locks.getOrDefault(event.getPlayer().getUniqueId().toString(), DynamicLights.manager.toggle)) {
-        event.getPlayer().sendMessage(DynamicLights.language.getComponentFromID("prevent-block-place", true));
+        event.getPlayer().sendMessage(DynamicLights.translate("prevent-block-place"));
         event.setCancelled(true);
       }
     }

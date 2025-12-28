@@ -1,6 +1,5 @@
 package github.xCykrix.dynamicLights.util;
 
-import github.xCykrix.extendable.DevkitFullState;
 import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,14 +9,16 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class LightSource extends DevkitFullState {
+public class LightSource {
   private final HashMap<Material, Integer> levelOfLights = new HashMap<>();
   private final HashSet<Material> submersibleLights = new HashSet<>();
   private final HashSet<Material> lockedLights = new HashSet<>();
 
-  public LightSource(JavaPlugin plugin) { super(plugin); }
+  private final JavaPlugin plugin;
 
-  @Override
+  public LightSource(JavaPlugin plugin) { this.plugin = plugin; }
+
+  // @Override
   public void initialize() {
     // YamlDocument lights = DynamicLights.configuration.getYAMLFile("lights.yml");
     YamlConfiguration lights = YamlConfiguration.loadConfiguration(new File(this.plugin.getDataFolder(), "lights.yml"));
@@ -69,7 +70,7 @@ public class LightSource extends DevkitFullState {
     this.plugin.getLogger().info("Registered " + this.lockedLights.size() + " items for Dynamic Locked Lights.");
   }
 
-  @Override
+  // @Override
   public void shutdown() {
     this.lockedLights.clear();
     this.submersibleLights.clear();
