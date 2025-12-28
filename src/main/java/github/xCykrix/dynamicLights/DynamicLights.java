@@ -31,6 +31,13 @@ public final class DynamicLights extends JavaPlugin {
 
   // @Override
   public void initialize() {
+
+    // save default config files
+    saveDefaultConfig();
+    saveResource("language.yml", false);
+    saveResource("lights.yml", false);
+
+
     // Register Configurations
     // configuration.register(new Resource("config.yml", null, this.getResource("config.yml")))
     // .register(new Resource("lights.yml", null, this.getResource("lights.yml"))).registerLanguageFile(this.getResource("language.yml"));
@@ -49,6 +56,9 @@ public final class DynamicLights extends JavaPlugin {
     PaperCommandManager manager = new PaperCommandManager(this);
     manager.registerCommand(new DynamicLightsCommand(this));
   }
+
+  @Override
+  public void onEnable() { initialize(); }
 
   // @Override
   public void shutdown() {

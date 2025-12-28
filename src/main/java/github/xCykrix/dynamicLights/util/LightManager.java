@@ -73,10 +73,13 @@ public class LightManager {
       return;
     }
 
+    plugin.getLogger().info("tick with enabled plugin");
+
     Set<Location> actualLocations = new HashSet<>();
 
     // For each online player, check if we should add a light.
     for (Player targetPlayer : Bukkit.getOnlinePlayers()) {
+      plugin.getLogger().info("player " + targetPlayer.getName() + " is online");
       Optional<Location> opLocation = run(targetPlayer);
       if (opLocation.isPresent()) {
         actualLocations.add(opLocation.get());
@@ -105,9 +108,11 @@ public class LightManager {
 
   private Optional<Location> run(Player player) {
     if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
+      plugin.getLogger().info("creative or spectator");
       return Optional.empty();
     }
     if (!(this.toggles.getOrDefault(player.getUniqueId().toString(), this.toggle))) {
+      plugin.getLogger().info("toggle false");
       return Optional.empty();
     }
 
@@ -119,10 +124,12 @@ public class LightManager {
     Material boot = getMaterialOrAir(player.getInventory().getBoots());
     int lightLevel = source.getLightLevel(mainHand, offHand, helmet, chestplate, legging, boot);
     if (lightLevel > 0) {
+      plugin.getLogger().info("lightLevel > 0 " + lightLevel);
       Location eyeLocation = player.getEyeLocation();
       Bukkit.getRegionScheduler().run(plugin, eyeLocation, st -> this.addLight(player.getEyeLocation(), lightLevel));
       return Optional.of(eyeLocation);
     }
+    plugin.getLogger().info("lightLevel <= 0");
     return Optional.empty();
   }
 
