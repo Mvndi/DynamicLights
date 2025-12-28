@@ -145,7 +145,7 @@ public class LightManager extends DevkitFullState {
     return false;
   }
 
-  private boolean getClosestAcceptableBlock(Block block) {
+  private Block getClosestAcceptableBlock(Block block) {
     List<Block> possibleLocation = List.of(block,block.getRelative(BlockFace.NORTH), block.getRelative(BlockFace.EAST), block.getRelative(BlockFace.SOUTH),
         block.getRelative(BlockFace.WEST), block.getRelative(BlockFace.UP), block.getRelative(BlockFace.DOWN));
 
@@ -168,10 +168,10 @@ public class LightManager extends DevkitFullState {
 
     // Only AIR or LIGHT or WATER can be replaced.
     block = getClosestAcceptableBlock(block);
-    if(!block){
+    if(block == null){
         return;
     }
-    
+
     Light light = (Light) Material.LIGHT.createBlockData();
     switch (block.getType()) {
       case AIR, CAVE_AIR -> {
