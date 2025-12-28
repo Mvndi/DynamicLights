@@ -21,6 +21,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Waterlogged;
 import org.bukkit.block.data.type.Light;
 import org.bukkit.entity.Player;
@@ -133,22 +134,46 @@ public class LightManager extends DevkitFullState {
     }
   }
 
+  private boolean acceptableBlock(Block block) {
+    Material type = block.getType();
+    if (type == Material.AIR || type == Material.CAVE_AIR || type == Material.WATER) {
+      return true;
+    }
+    if (block.getBlockData() instanceof Waterlogged waterlogged && waterlogged.isWaterlogged()) {
+      return true;
+    }
+    return false;
+  }
+
+  private boolean getClosestAcceptableBlock(Block block) {
+    List<Block> possibleLocation = List.of(block,block.getRelative(BlockFace.NORTH), block.getRelative(BlockFace.EAST), block.getRelative(BlockFace.SOUTH),
+        block.getRelative(BlockFace.WEST), block.getRelative(BlockFace.UP), block.getRelative(BlockFace.DOWN));
+
+    for (Block relativeBlock : possibleLocation) {
+        if (acceptableBlock(relativeBlock)) {
+            return relativeBlock;
+        }
+    }
+    return null;
+  }
+
   public void addLight(Location location, int lightLevel) {
     if (lightLevel == 0) {
       return;
     }
     World world = location.getWorld();
     Block block = world.getBlockAt(location);
-    // Only AIR or LIGHT or WATER can be replaced.
-    if (block.getType() != Material.AIR && block.getType() != Material.LIGHT && block.getType() != Material.WATER) {
-      return;
-    }
-    if (block.getBlockData() instanceof Light lightData && lightData.getLevel() == lightLevel) {
-      return;
-    }
 
+    
+
+    // Only AIR or LIGHT or WATER can be replaced.
+    block = getClosestAcceptableBlock(block);
+    if(!block){
+        return;
+    }
+    
     Light light = (Light) Material.LIGHT.createBlockData();
-    switch (world.getBlockAt(location).getType()) {
+    switch (block.getType()) {
       case AIR, CAVE_AIR -> {
         light.setWaterlogged(false);
         light.setLevel(lightLevel);
