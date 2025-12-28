@@ -127,7 +127,7 @@ public class LightManager {
     if (lightLevel > 0) {
       // plugin.getLogger().info("lightLevel > 0 " + lightLevel);
       Location eyeLocation = player.getEyeLocation();
-      Bukkit.getRegionScheduler().run(plugin, eyeLocation, st -> this.addLight(eyeLocation, lightLevel));
+      Bukkit.getRegionScheduler().run(plugin, eyeLocation, st -> this.addLight(eyeLocation, lightLevel, source.isSubmersible(mainHand, offHand, helmet, chestplate, legging, boot)));
       return Optional.of(eyeLocation);
     }
     // plugin.getLogger().info("lightLevel <= 0");
@@ -146,8 +146,6 @@ public class LightManager {
   private boolean acceptableBlock(Block block) {
     Material type = block.getType();
     return type == Material.AIR || type == Material.CAVE_AIR  || type == Material.LIGHT || type == Material.WATER;
-    // TODO reenable water lights
-    // || type == Material.WATER;
   }
 
   private Block getClosestAcceptableBlock(Block block) {
@@ -163,7 +161,7 @@ public class LightManager {
     return null;
   }
 
-  public void addLight(Location location, int lightLevel) {
+  public void addLight(Location location, int lightLevel, boolean isSubmersible) {
     if (lightLevel == 0) {
       return;
     }
@@ -199,8 +197,12 @@ public class LightManager {
         light.setLevel(lightLevel);
       }
       case WATER -> {
-        light.setWaterlogged(true);
-        light.setLevel(lightLevel);
+          if(isSubmersible){
+            light.setWaterlogged(true);
+            light.setLevel(lightLevel);
+          }else{
+            return;
+          }
       }
       default -> {
       }
@@ -223,31 +225,31 @@ public class LightManager {
     lights.remove(location);
   }
 
-  public boolean valid(Player player, Material mainHand, Material offHand, Material helmet, Material chestplate, Material legging,
-      Material boot) {
-    boolean hasLightLevel = false;
-    hasLightLevel = source.hasLightLevel(mainHand) ? true : hasLightLevel;
-    hasLightLevel = source.hasLightLevel(offHand) ? true : hasLightLevel;
-    hasLightLevel = source.hasLightLevel(helmet) ? true : hasLightLevel;
-    hasLightLevel = source.hasLightLevel(chestplate) ? true : hasLightLevel;
-    hasLightLevel = source.hasLightLevel(legging) ? true : hasLightLevel;
-    hasLightLevel = source.hasLightLevel(boot) ? true : hasLightLevel;
+  // public boolean valid(Player player, Material mainHand, Material offHand, Material helmet, Material chestplate, Material legging,
+  //     Material boot) {
+  //   boolean hasLightLevel = false;
+  //   hasLightLevel = source.hasLightLevel(mainHand) ? true : hasLightLevel;
+  //   hasLightLevel = source.hasLightLevel(offHand) ? true : hasLightLevel;
+  //   hasLightLevel = source.hasLightLevel(helmet) ? true : hasLightLevel;
+  //   hasLightLevel = source.hasLightLevel(chestplate) ? true : hasLightLevel;
+  //   hasLightLevel = source.hasLightLevel(legging) ? true : hasLightLevel;
+  //   hasLightLevel = source.hasLightLevel(boot) ? true : hasLightLevel;
 
-    if (!hasLightLevel) {
-      return false;
-    }
-    Block currentLocation = player.getEyeLocation().getBlock();
-    if (currentLocation.getType() == Material.AIR || currentLocation.getType() == Material.CAVE_AIR) {
-      return true;
-    }
-    if (currentLocation instanceof Waterlogged currentLocationWaterlogged && currentLocationWaterlogged.isWaterlogged()) {
-      return false;
-    }
-    if (currentLocation.getType() == Material.WATER) {
-      return source.isSubmersible(mainHand, offHand, helmet, chestplate, legging, boot);
-    }
-    return false;
-  }
+  //   if (!hasLightLevel) {
+  //     return false;
+  //   }
+  //   Block currentLocation = player.getEyeLocation().getBlock();
+  //   if (currentLocation.getType() == Material.AIR || currentLocation.getType() == Material.CAVE_AIR) {
+  //     return true;
+  //   }
+  //   if (currentLocation instanceof Waterlogged currentLocationWaterlogged && currentLocationWaterlogged.isWaterlogged()) {
+  //     return false;
+  //   }
+  //   if (currentLocation.getType() == Material.WATER) {
+  //     return source.isSubmersible(mainHand, offHand, helmet, chestplate, legging, boot);
+  //   }
+  //   return false;
+  // }
 
   public Location getLastLocation(String uuid) { return lastLightLocation.getOrDefault(uuid, null); }
 
