@@ -20,7 +20,6 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.Waterlogged;
 import org.bukkit.block.data.type.Light;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -91,7 +90,9 @@ public class LightManager {
     synchronized (this.lights) {
       for (Location location : this.lights) {
         if (!actualLocations.contains(location)) {
-          Bukkit.getRegionScheduler().run(plugin, location, st -> this.removeLight(location));
+          // Bukkit.getRegionScheduler().run(plugin, location, st -> this.removeLight(location));
+          // 2 tick delay to avoid packet about removing light being received faster than the one adding the new light.
+          Bukkit.getRegionScheduler().runDelayed(plugin, location, st -> this.removeLight(location), 2);
         }
       }
       this.lights.clear();
@@ -127,7 +128,8 @@ public class LightManager {
     if (lightLevel > 0) {
       // plugin.getLogger().info("lightLevel > 0 " + lightLevel);
       Location eyeLocation = player.getEyeLocation();
-      Bukkit.getRegionScheduler().run(plugin, eyeLocation, st -> this.addLight(eyeLocation, lightLevel, source.isSubmersible(mainHand, offHand, helmet, chestplate, legging, boot)));
+      Bukkit.getRegionScheduler().run(plugin, eyeLocation,
+          st -> this.addLight(eyeLocation, lightLevel, source.isSubmersible(mainHand, offHand, helmet, chestplate, legging, boot)));
       return Optional.of(eyeLocation);
     }
     // plugin.getLogger().info("lightLevel <= 0");
@@ -145,7 +147,7 @@ public class LightManager {
 
   private boolean acceptableBlock(Block block) {
     Material type = block.getType();
-    return type == Material.AIR || type == Material.CAVE_AIR  || type == Material.LIGHT || type == Material.WATER;
+    return type == Material.AIR || type == Material.CAVE_AIR || type == Material.LIGHT || type == Material.WATER;
   }
 
   private Block getClosestAcceptableBlock(Block block) {
@@ -170,25 +172,24 @@ public class LightManager {
     World world = location.getWorld();
     Block block = world.getBlockAt(location);
 
-    
+
     // Only AIR or LIGHT or WATER can be replaced.
     block = getClosestAcceptableBlock(block);
 
     if (block == null) {
-        return;
-      }
+      return;
+    }
 
     if (block.getType() == Material.LIGHT) {
-        // return if existing light level if the same
-        Light existingLight = (Light) block.getBlockData();
-        if (existingLight.getLevel() == lightLevel) {
-          return;
+      // return if existing light level if the same
+      Light existingLight = (Light) block.getBlockData();
+      if (existingLight.getLevel() == lightLevel) {
+        return;
 
-        }
-        
       }
-    
-      
+
+    }
+
 
     location = block.getLocation();
 
@@ -199,12 +200,12 @@ public class LightManager {
         light.setLevel(lightLevel);
       }
       case WATER -> {
-          if(isSubmersible){
-            light.setWaterlogged(true);
-            light.setLevel(lightLevel);
-          }else{
-            return;
-          }
+        if (isSubmersible) {
+          light.setWaterlogged(true);
+          light.setLevel(lightLevel);
+        } else {
+          return;
+        }
       }
       default -> {
       }
@@ -215,42 +216,40 @@ public class LightManager {
 
   public void removeLight(Location location) {
     Block b = location.getWorld().getBlockAt(location);
-    if (b.getType() == Material.LIGHT) {
-      if (b.getBlockData() instanceof Light light) {
-        if (light.isWaterlogged()) {
-          b.setType(Material.WATER);
-        }else{
-          b.setType(Material.AIR);
-        }
+    if (b.getBlockData() instanceof Light light) {
+      if (light.isWaterlogged()) {
+        b.setType(Material.WATER);
+      } else {
+        b.setType(Material.AIR);
       }
     }
     lights.remove(location);
   }
 
   // public boolean valid(Player player, Material mainHand, Material offHand, Material helmet, Material chestplate, Material legging,
-  //     Material boot) {
-  //   boolean hasLightLevel = false;
-  //   hasLightLevel = source.hasLightLevel(mainHand) ? true : hasLightLevel;
-  //   hasLightLevel = source.hasLightLevel(offHand) ? true : hasLightLevel;
-  //   hasLightLevel = source.hasLightLevel(helmet) ? true : hasLightLevel;
-  //   hasLightLevel = source.hasLightLevel(chestplate) ? true : hasLightLevel;
-  //   hasLightLevel = source.hasLightLevel(legging) ? true : hasLightLevel;
-  //   hasLightLevel = source.hasLightLevel(boot) ? true : hasLightLevel;
+  // Material boot) {
+  // boolean hasLightLevel = false;
+  // hasLightLevel = source.hasLightLevel(mainHand) ? true : hasLightLevel;
+  // hasLightLevel = source.hasLightLevel(offHand) ? true : hasLightLevel;
+  // hasLightLevel = source.hasLightLevel(helmet) ? true : hasLightLevel;
+  // hasLightLevel = source.hasLightLevel(chestplate) ? true : hasLightLevel;
+  // hasLightLevel = source.hasLightLevel(legging) ? true : hasLightLevel;
+  // hasLightLevel = source.hasLightLevel(boot) ? true : hasLightLevel;
 
-  //   if (!hasLightLevel) {
-  //     return false;
-  //   }
-  //   Block currentLocation = player.getEyeLocation().getBlock();
-  //   if (currentLocation.getType() == Material.AIR || currentLocation.getType() == Material.CAVE_AIR) {
-  //     return true;
-  //   }
-  //   if (currentLocation instanceof Waterlogged currentLocationWaterlogged && currentLocationWaterlogged.isWaterlogged()) {
-  //     return false;
-  //   }
-  //   if (currentLocation.getType() == Material.WATER) {
-  //     return source.isSubmersible(mainHand, offHand, helmet, chestplate, legging, boot);
-  //   }
-  //   return false;
+  // if (!hasLightLevel) {
+  // return false;
+  // }
+  // Block currentLocation = player.getEyeLocation().getBlock();
+  // if (currentLocation.getType() == Material.AIR || currentLocation.getType() == Material.CAVE_AIR) {
+  // return true;
+  // }
+  // if (currentLocation instanceof Waterlogged currentLocationWaterlogged && currentLocationWaterlogged.isWaterlogged()) {
+  // return false;
+  // }
+  // if (currentLocation.getType() == Material.WATER) {
+  // return source.isSubmersible(mainHand, offHand, helmet, chestplate, legging, boot);
+  // }
+  // return false;
   // }
 
   public Location getLastLocation(String uuid) { return lastLightLocation.getOrDefault(uuid, null); }

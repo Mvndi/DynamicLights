@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "github.xCykrix"
-version = "1.4.0"
+version = "1.4.1"
 description="Dynamic Lights for Minecraft Servers without requiring Modding."
 val mainMinecraftVersion = "1.21.11"
 val supportedMinecraftVersions = "1.21.11 - 1.21.11"
@@ -46,6 +46,19 @@ tasks.named<ShadowJar>("shadowJar") {
 tasks {
     assemble {
         dependsOn(shadowJar)
+    }
+    processResources {
+        val props = mapOf(
+            "name" to project.name,
+            "version" to project.version,
+            "description" to project.description,
+            "apiVersion" to "1.21.11",
+            "group" to project.group
+        )
+        inputs.properties(props)
+        filesMatching("plugin.yml") {
+            expand(props)
+        }
     }
     runServer {
         // Configure the Minecraft version for our task.
