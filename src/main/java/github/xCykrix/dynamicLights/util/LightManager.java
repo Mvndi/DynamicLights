@@ -90,9 +90,7 @@ public class LightManager {
     synchronized (this.lights) {
       for (Location location : this.lights) {
         if (!actualLocations.contains(location)) {
-          // Bukkit.getRegionScheduler().run(plugin, location, st -> this.removeLight(location));
-          // 2 tick delay to avoid packet about removing light being received faster than the one adding the new light.
-          Bukkit.getRegionScheduler().runDelayed(plugin, location, st -> this.removeLight(location), 2);
+          Bukkit.getRegionScheduler().run(plugin, location, st -> this.removeLight(location));
         }
       }
       this.lights.clear();
@@ -105,6 +103,7 @@ public class LightManager {
       for (Location location : lights) {
         Bukkit.getRegionScheduler().run(plugin, location, st -> this.removeLight(location));
       }
+      this.lights.clear();
     }
   }
 
@@ -130,7 +129,8 @@ public class LightManager {
       Location eyeLocation = player.getEyeLocation();
       Bukkit.getRegionScheduler().run(plugin, eyeLocation,
           st -> this.addLight(eyeLocation, lightLevel, source.isSubmersible(mainHand, offHand, helmet, chestplate, legging, boot)));
-      return Optional.of(eyeLocation);
+      Location blockEyeLocation = getClosestAcceptableBlock(eyeLocation.getBlock()).getLocation();
+      return Optional.of(blockEyeLocation);
     }
     // plugin.getLogger().info("lightLevel <= 0");
     return Optional.empty();
@@ -212,6 +212,7 @@ public class LightManager {
     }
     lights.add(location);
     location.getWorld().setBlockData(location, light);
+    // DynamicLights.getInstance().getLogger().info("Added light at " + location);
   }
 
   public void removeLight(Location location) {
@@ -223,7 +224,8 @@ public class LightManager {
         b.setType(Material.AIR);
       }
     }
-    lights.remove(location);
+    // DynamicLights.getInstance().getLogger().info("Removed light at " + location);
+    // lights.remove(location); // it have been removed when planning the task.
   }
 
   // public boolean valid(Player player, Material mainHand, Material offHand, Material helmet, Material chestplate, Material legging,

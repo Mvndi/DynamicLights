@@ -1,3 +1,7 @@
+# 1.4.2
+
+Fix light location being compare between block & player eye wich was never the same making the light flicker.
+
 # 1.3.4
 
 Update to 1.21.11 by using co.aikar:acf-paper instead of the custom NMS commands code from github.xCykrix:spigotdevkit.

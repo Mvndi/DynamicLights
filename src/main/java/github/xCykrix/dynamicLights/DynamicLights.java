@@ -70,4 +70,6 @@ public final class DynamicLights extends JavaPlugin {
     // TODO fix language file access & color interpretation
     return key;
   }
+
+  public static DynamicLights getInstance() { return DynamicLights.getPlugin(DynamicLights.class); }
 }
