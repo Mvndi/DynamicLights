@@ -1,14 +1,10 @@
 package github.xCykrix.dynamicLights.util;
 
 import github.xCykrix.dynamicLights.DynamicLights;
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -17,7 +13,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Light;
@@ -27,8 +22,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class LightManager {
   private final LightSource source;
-  private final HashMap<UUID, ScheduledTask> tasks = new HashMap<>();
-  private final HashMap<String, Location> lastLightLocation = new HashMap<>();
+  private final Map<UUID, Location> lastLightLocation = new ConcurrentHashMap<>(200);
 
   public final ConcurrentMap<String, Boolean> toggles;
   public final ConcurrentMap<String, Boolean> locks;
@@ -36,8 +30,6 @@ public class LightManager {
   public final boolean toggle;
 
   private JavaPlugin plugin;
-
-  private final List<Location> lights;
 
   public LightManager(JavaPlugin plugin) {
     this.plugin = plugin;
@@ -55,67 +47,64 @@ public class LightManager {
     this.refresh = plugin.getConfig().getLong("update-rate");
     this.toggle = plugin.getConfig().getBoolean("default-toggle-state");
 
-    this.lights = Collections.synchronizedList(new LinkedList<>());
+    // this.lights = Collections.synchronizedList(new LinkedList<>());
 
-    // @NotNull ScheduledTask runAtFixedRate(@NotNull Plugin plugin, @NotNull Consumer<ScheduledTask> task, long initialDelay, long period,
-    // @NotNull TimeUnit unit);
     Bukkit.getAsyncScheduler().runAtFixedRate(plugin, st -> tick(), 0L, refresh, TimeUnit.MILLISECONDS);
   }
 
 
   // @Override
-  public void shutdown() { clearLight(); }
+  public void shutdown() { clearAllLights(); }
 
 
   public void tick() {
     if (!plugin.isEnabled()) {
-      clearLight();
+      clearAllLights();
       return;
     }
 
-    // plugin.getLogger().info("tick with enabled plugin");
-
-    Set<Location> actualLocations = new HashSet<>();
-
-    // For each online player, check if we should add a light.
-    for (Player targetPlayer : Bukkit.getOnlinePlayers()) {
-      // plugin.getLogger().info("player " + targetPlayer.getName() + " is online");
-      Optional<Location> opLocation = run(targetPlayer);
-      if (opLocation.isPresent()) {
-        actualLocations.add(opLocation.get());
-      }
+    // For each online player, check if we should add a light or move the existing one
+    Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+    for (Player targetPlayer : players) {
+      updatePlayerLight(targetPlayer);
     }
 
-    // Remove all old light except for the one in actualLocations
-    synchronized (this.lights) {
-      for (Location location : this.lights) {
-        if (!actualLocations.contains(location)) {
-          Bukkit.getRegionScheduler().run(plugin, location, st -> this.removeLight(location));
-        }
-      }
-      this.lights.clear();
-      this.lights.addAll(actualLocations);
+    // // If there is some player UUID in the lastLightLocation that are not only anymore, remove the light & the player from the
+    // // lastLightLocation.
+    // for (Map.Entry<UUID, Location> entry : lastLightLocation.entrySet()) {
+    // if (!players.contains(Bukkit.getPlayer(entry.getKey()))) {
+    // Bukkit.getRegionScheduler().run(plugin, entry.getValue(), st -> this.removeLight(entry.getKey()));
+    // }
+    // }
+  }
+
+  public void clearAllLights() {
+    for (Map.Entry<UUID, Location> entry : lastLightLocation.entrySet()) {
+      Bukkit.getRegionScheduler().run(plugin, entry.getValue(), st -> this.removeLight(entry.getKey()));
     }
   }
 
-  public void clearLight() {
-    synchronized (this.lights) {
-      for (Location location : lights) {
-        Bukkit.getRegionScheduler().run(plugin, location, st -> this.removeLight(location));
-      }
-      this.lights.clear();
+  public void updatePlayerLight(Player player) {
+    Location playerLocation = player.getLocation();
+    if (playerLocation != null) { // might be null.
+      Bukkit.getRegionScheduler().run(plugin, playerLocation, st -> updateLightToNewLocation(player));
     }
   }
 
-  private Optional<Location> run(Player player) {
+  /**
+   * Find the best location to place a light and update the light if needed.
+   */
+  private Optional<Location> updateLightToNewLocation(Player player) {
     if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
       // plugin.getLogger().info("creative or spectator");
+      this.removeLight(player.getUniqueId());
       return Optional.empty();
     }
     if (!(this.toggles.getOrDefault(player.getUniqueId().toString(), this.toggle))) {
-      // plugin.getLogger().info("toggle false");plugin.getLogger().info
+      this.removeLight(player.getUniqueId());
       return Optional.empty();
     }
+
 
     Material mainHand = getMaterialOrAir(player.getInventory().getItemInMainHand());
     Material offHand = getMaterialOrAir(player.getInventory().getItemInOffHand());
@@ -127,22 +116,35 @@ public class LightManager {
     if (lightLevel > 0) {
       // plugin.getLogger().info("lightLevel > 0 " + lightLevel);
       Location eyeLocation = player.getEyeLocation();
-      Bukkit.getRegionScheduler().run(plugin, eyeLocation,
-          st -> this.addLight(eyeLocation, lightLevel, source.isSubmersible(mainHand, offHand, helmet, chestplate, legging, boot)));
-      Location blockEyeLocation = getClosestAcceptableBlock(eyeLocation.getBlock()).getLocation();
-      return Optional.of(blockEyeLocation);
+      Block bestBlock = getClosestAcceptableBlock(eyeLocation.getBlock());
+      if (bestBlock == null) {
+        this.removeLight(player.getUniqueId());
+        return Optional.empty();
+      }
+      Location bestBlockLocation = bestBlock.getLocation();
+
+      // Update the light in Minecraft & int lastLightLocation
+      Location last = lastLightLocation.getOrDefault(player.getUniqueId(), null);
+      if (last != null) {
+        if (last.equals(bestBlockLocation) && bestBlock.getType() == Material.LIGHT
+            && bestBlock.getBlockData() instanceof Light existingLight && existingLight.getLevel() == lightLevel) {
+          // The light is already at the right location with the right level, no need to remove or to add
+          return Optional.empty();
+        }
+        this.removeLight(player.getUniqueId());
+      }
+
+      if (!player.isOnline()) { // player might have log off in the meantime
+        return Optional.empty();
+      }
+      lastLightLocation.put(player.getUniqueId(), bestBlockLocation); // replace ligh location
+      this.addLight(bestBlock, lightLevel, source.isSubmersible(mainHand, offHand, helmet, chestplate, legging, boot));
+
+      return Optional.of(bestBlockLocation);
     }
     // plugin.getLogger().info("lightLevel <= 0");
+    this.removeLight(player.getUniqueId());
     return Optional.empty();
-  }
-
-  public void removePlayer(UUID uid) {
-    synchronized (this.tasks) {
-      if (this.tasks.containsKey(uid)) {
-        this.tasks.get(uid).cancel();
-        this.tasks.remove(uid);
-      }
-    }
   }
 
   private boolean acceptableBlock(Block block) {
@@ -163,36 +165,7 @@ public class LightManager {
     return null;
   }
 
-  public void addLight(Location location, int lightLevel, boolean isSubmersible) {
-    if (lightLevel == 0) {
-      return;
-    }
-
-
-    World world = location.getWorld();
-    Block block = world.getBlockAt(location);
-
-
-    // Only AIR or LIGHT or WATER can be replaced.
-    block = getClosestAcceptableBlock(block);
-
-    if (block == null) {
-      return;
-    }
-
-    if (block.getType() == Material.LIGHT) {
-      // return if existing light level if the same
-      Light existingLight = (Light) block.getBlockData();
-      if (existingLight.getLevel() == lightLevel) {
-        return;
-
-      }
-
-    }
-
-
-    location = block.getLocation();
-
+  public void addLight(Block block, int lightLevel, boolean isSubmersible) {
     Light light = (Light) Material.LIGHT.createBlockData();
     switch (block.getType()) {
       case AIR, CAVE_AIR -> {
@@ -208,14 +181,17 @@ public class LightManager {
         }
       }
       default -> {
+        // do nothing
       }
     }
-    lights.add(location);
-    location.getWorld().setBlockData(location, light);
-    // DynamicLights.getInstance().getLogger().info("Added light at " + location);
+
+    block.getWorld().setBlockData(block.getLocation(), light);
+
+    // DynamicLights.getInstance().getLogger().info("Added light at " + block.getLocation());
   }
 
-  public void removeLight(Location location) {
+  public void removeLight(UUID playerUuid) {
+    Location location = lastLightLocation.get(playerUuid);
     Block b = location.getWorld().getBlockAt(location);
     if (b.getBlockData() instanceof Light light) {
       if (light.isWaterlogged()) {
@@ -224,41 +200,9 @@ public class LightManager {
         b.setType(Material.AIR);
       }
     }
+    lastLightLocation.remove(playerUuid);
     // DynamicLights.getInstance().getLogger().info("Removed light at " + location);
-    // lights.remove(location); // it have been removed when planning the task.
   }
-
-  // public boolean valid(Player player, Material mainHand, Material offHand, Material helmet, Material chestplate, Material legging,
-  // Material boot) {
-  // boolean hasLightLevel = false;
-  // hasLightLevel = source.hasLightLevel(mainHand) ? true : hasLightLevel;
-  // hasLightLevel = source.hasLightLevel(offHand) ? true : hasLightLevel;
-  // hasLightLevel = source.hasLightLevel(helmet) ? true : hasLightLevel;
-  // hasLightLevel = source.hasLightLevel(chestplate) ? true : hasLightLevel;
-  // hasLightLevel = source.hasLightLevel(legging) ? true : hasLightLevel;
-  // hasLightLevel = source.hasLightLevel(boot) ? true : hasLightLevel;
-
-  // if (!hasLightLevel) {
-  // return false;
-  // }
-  // Block currentLocation = player.getEyeLocation().getBlock();
-  // if (currentLocation.getType() == Material.AIR || currentLocation.getType() == Material.CAVE_AIR) {
-  // return true;
-  // }
-  // if (currentLocation instanceof Waterlogged currentLocationWaterlogged && currentLocationWaterlogged.isWaterlogged()) {
-  // return false;
-  // }
-  // if (currentLocation.getType() == Material.WATER) {
-  // return source.isSubmersible(mainHand, offHand, helmet, chestplate, legging, boot);
-  // }
-  // return false;
-  // }
-
-  public Location getLastLocation(String uuid) { return lastLightLocation.getOrDefault(uuid, null); }
-
-  public void setLastLocation(String uuid, Location location) { lastLightLocation.put(uuid, location); }
-
-  public void removeLastLocation(String uuid) { lastLightLocation.remove(uuid); }
 
   private Material getMaterialOrAir(ItemStack item) {
     if (item == null)

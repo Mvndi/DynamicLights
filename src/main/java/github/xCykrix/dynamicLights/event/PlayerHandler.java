@@ -36,5 +36,5 @@ public class PlayerHandler implements Listener {
   // }
 
   @EventHandler(priority = EventPriority.MONITOR)
-  public void onPlayerQuitEvent(PlayerQuitEvent event) { DynamicLights.manager.removePlayer(event.getPlayer().getUniqueId()); }
+  public void onPlayerQuitEvent(PlayerQuitEvent event) { DynamicLights.manager.removeLight(event.getPlayer().getUniqueId()); }
 }

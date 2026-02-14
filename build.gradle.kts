@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "github.xCykrix"
-version = "1.4.2"
+version = "1.4.3"
 description="Dynamic Lights for Minecraft Servers without requiring Modding."
 val mainMinecraftVersion = "1.21.11"
 val supportedMinecraftVersions = "1.21.11 - 1.21.11"
@@ -66,6 +66,7 @@ tasks {
         // Your plugin's jar (or shadowJar if present) will be used automatically.
         minecraftVersion(mainMinecraftVersion)
     }
+    runPaper.folia.registerTask()
 }
 
 val targetJavaVersion = 21

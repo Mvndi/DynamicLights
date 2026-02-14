@@ -1,3 +1,7 @@
+# 1.4.3
+
+Folia fix: run find best block logic in region thread.
+
 # 1.4.2
 
 Fix light location being compare between block & player eye wich was never the same making the light flicker.
