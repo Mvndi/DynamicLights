@@ -13,6 +13,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Light;
@@ -69,18 +70,19 @@ public class LightManager {
       updatePlayerLight(targetPlayer);
     }
 
+    // It's now done in player logout event.
     // // If there is some player UUID in the lastLightLocation that are not only anymore, remove the light & the player from the
     // // lastLightLocation.
     // for (Map.Entry<UUID, Location> entry : lastLightLocation.entrySet()) {
     // if (!players.contains(Bukkit.getPlayer(entry.getKey()))) {
-    // Bukkit.getRegionScheduler().run(plugin, entry.getValue(), st -> this.removeLight(entry.getKey()));
+    // Bukkit.getRegionScheduler().run(plugin, entry.getValue(), st -> this.removeLightFromLocationRegion(entry.getKey()));
     // }
     // }
   }
 
   public void clearAllLights() {
     for (Map.Entry<UUID, Location> entry : lastLightLocation.entrySet()) {
-      Bukkit.getRegionScheduler().run(plugin, entry.getValue(), st -> this.removeLight(entry.getKey()));
+      Bukkit.getRegionScheduler().run(plugin, entry.getValue(), st -> this.removeLightFromLocationRegion(entry.getKey()));
     }
   }
 
@@ -97,11 +99,11 @@ public class LightManager {
   private Optional<Location> updateLightToNewLocation(Player player) {
     if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
       // plugin.getLogger().info("creative or spectator");
-      this.removeLight(player.getUniqueId());
+      this.removeLightFromLocationRegion(player.getUniqueId());
       return Optional.empty();
     }
     if (!(this.toggles.getOrDefault(player.getUniqueId().toString(), this.toggle))) {
-      this.removeLight(player.getUniqueId());
+      this.removeLightFromLocationRegion(player.getUniqueId());
       return Optional.empty();
     }
 
@@ -118,10 +120,14 @@ public class LightManager {
       Location eyeLocation = player.getEyeLocation();
       Block bestBlock = getClosestAcceptableBlock(eyeLocation.getBlock());
       if (bestBlock == null) {
-        this.removeLight(player.getUniqueId());
+        this.removeLightFromLocationRegion(player.getUniqueId());
         return Optional.empty();
       }
       Location bestBlockLocation = bestBlock.getLocation();
+      if (bestBlockLocation == null) {
+        this.removeLightFromLocationRegion(player.getUniqueId());
+        return Optional.empty();
+      }
 
       // Update the light in Minecraft & int lastLightLocation
       Location last = lastLightLocation.getOrDefault(player.getUniqueId(), null);
@@ -131,7 +137,7 @@ public class LightManager {
           // The light is already at the right location with the right level, no need to remove or to add
           return Optional.empty();
         }
-        this.removeLight(player.getUniqueId());
+        this.removeLightFromLocationRegion(player.getUniqueId());
       }
 
       if (!player.isOnline()) { // player might have log off in the meantime
@@ -143,7 +149,7 @@ public class LightManager {
       return Optional.of(bestBlockLocation);
     }
     // plugin.getLogger().info("lightLevel <= 0");
-    this.removeLight(player.getUniqueId());
+    this.removeLightFromLocationRegion(player.getUniqueId());
     return Optional.empty();
   }
 
@@ -190,18 +196,32 @@ public class LightManager {
     // DynamicLights.getInstance().getLogger().info("Added light at " + block.getLocation());
   }
 
-  public void removeLight(UUID playerUuid) {
+  private void removeLight(UUID playerUuid) {
     Location location = lastLightLocation.get(playerUuid);
-    Block b = location.getWorld().getBlockAt(location);
-    if (b.getBlockData() instanceof Light light) {
-      if (light.isWaterlogged()) {
-        b.setType(Material.WATER);
-      } else {
-        b.setType(Material.AIR);
+    if (location != null) {
+      World world = location.getWorld();
+      if (world != null) {
+        Block b = world.getBlockAt(location);
+        if (b.getBlockData() instanceof Light light) {
+          if (light.isWaterlogged()) {
+            b.setType(Material.WATER);
+          } else {
+            b.setType(Material.AIR);
+          }
+        }
       }
     }
     lastLightLocation.remove(playerUuid);
     // DynamicLights.getInstance().getLogger().info("Removed light at " + location);
+  }
+
+  public void removeLightFromLocationRegion(UUID playerUuid) {
+    if (playerUuid == null || !lastLightLocation.containsKey(playerUuid)) {
+      return;
+    }
+
+    Location location = lastLightLocation.get(playerUuid);
+    Bukkit.getRegionScheduler().run(plugin, location, st -> this.removeLight(playerUuid));
   }
 
   private Material getMaterialOrAir(ItemStack item) {

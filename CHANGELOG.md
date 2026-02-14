@@ -1,3 +1,7 @@
+# 1.4.4
+
+Fix player dying exception
+
 # 1.4.3
 
 Folia fix: run find best block logic in region thread.
