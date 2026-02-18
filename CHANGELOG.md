@@ -1,3 +1,6 @@
+# 1.4.6
+Fix light removing
+
 # 1.4.5
 Fix light being removed from the new location instead of the old location.
 

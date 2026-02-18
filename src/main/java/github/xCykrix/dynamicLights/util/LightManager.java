@@ -211,7 +211,8 @@ public class LightManager {
         }
       }
     }
-    lastLightLocation.remove(playerUuid);
+    // Remove only if its the current last location, else we want to keep that value to remove it later when we will have to remove the light.
+    lastLightLocation.remove(playerUuid, location);
     // DynamicLights.getInstance().getLogger().info("Removed light at " + location);
   }
 
