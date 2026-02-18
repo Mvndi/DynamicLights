@@ -1,5 +1,5 @@
-# Update Rate: Controls how often the DynamicLights will tick. Defaults to 5 (4 times per second). Player heavy servers may require less often.
-update-rate: 5
+# Update Rate: Controls how often the DynamicLights will tick. Defaults to 50ms. Player heavy servers may require less often.
+update-rate: 50
 
 # Default Toggle State: Controls if Dynamic Lighting is enabled by default.
 default-toggle-state: true
