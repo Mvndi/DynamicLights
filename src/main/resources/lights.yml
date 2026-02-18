@@ -16,6 +16,7 @@ levels:
   PEARLESCENT_FROGLIGHT: 15
   VERDANT_FROGLIGHT: 15
   JACK_O_LANTERN: 15
+  COPPER_TORCH: 9
 
 # String List of Submersible Materials
 submersibles:
