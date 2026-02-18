@@ -196,8 +196,8 @@ public class LightManager {
     // DynamicLights.getInstance().getLogger().info("Added light at " + block.getLocation());
   }
 
-  private void removeLight(UUID playerUuid) {
-    Location location = lastLightLocation.get(playerUuid);
+  private void removeLight(UUID playerUuid, Location location) {
+    // Location location = lastLightLocation.get(playerUuid);
     if (location != null) {
       World world = location.getWorld();
       if (world != null) {
@@ -221,7 +221,8 @@ public class LightManager {
     }
 
     Location location = lastLightLocation.get(playerUuid);
-    Bukkit.getRegionScheduler().run(plugin, location, st -> this.removeLight(playerUuid));
+    // Since it's planned for later, we need to send the current last location before it will be override when placing the new light.
+    Bukkit.getRegionScheduler().run(plugin, location, st -> this.removeLight(playerUuid, location));
   }
 
   private Material getMaterialOrAir(ItemStack item) {
