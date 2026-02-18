@@ -36,6 +36,8 @@ lockables:
   - "SOUL_TORCH"
   - "LANTERN"
   - "SOUL_LANTERN"
+  - REDSTONE_TORCH
+  - COPPER_TORCH
 
 # DO NOT EDIT THE VERSION. Manual edits may corrupt or reset configuration files.
 #
