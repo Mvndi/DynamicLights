@@ -82,7 +82,7 @@ public class LightManager {
 
   public void clearAllLights() {
     for (Map.Entry<UUID, Location> entry : lastLightLocation.entrySet()) {
-      Bukkit.getRegionScheduler().run(plugin, entry.getValue(), st -> this.removeLightFromLocationRegion(entry.getKey()));
+      this.removeLightFromLocationRegion(entry.getKey());
     }
   }
 
