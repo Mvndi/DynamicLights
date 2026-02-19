@@ -70,14 +70,7 @@ public class LightManager {
       updatePlayerLight(targetPlayer);
     }
 
-    // It's now done in player logout event.
-    // // If there is some player UUID in the lastLightLocation that are not only anymore, remove the light & the player from the
-    // // lastLightLocation.
-    // for (Map.Entry<UUID, Location> entry : lastLightLocation.entrySet()) {
-    // if (!players.contains(Bukkit.getPlayer(entry.getKey()))) {
-    // Bukkit.getRegionScheduler().run(plugin, entry.getValue(), st -> this.removeLightFromLocationRegion(entry.getKey()));
-    // }
-    // }
+    // Removing player light when the player quit is now done in player quit event.
   }
 
   public void clearAllLights() {
@@ -87,16 +80,14 @@ public class LightManager {
   }
 
   public void updatePlayerLight(Player player) {
-    Location playerLocation = player.getLocation();
-    if (playerLocation != null) { // might be null.
-      Bukkit.getRegionScheduler().run(plugin, playerLocation, st -> updateLightToNewLocation(player));
-    }
+    Location playerLocation = player.getEyeLocation();
+    Bukkit.getRegionScheduler().run(plugin, playerLocation, st -> updateLightToNewLocation(player, playerLocation));
   }
 
   /**
    * Find the best location to place a light and update the light if needed.
    */
-  private Optional<Location> updateLightToNewLocation(Player player) {
+  private Optional<Location> updateLightToNewLocation(Player player, Location eyeLocation) {
     if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
       // plugin.getLogger().info("creative or spectator");
       this.removeLightFromLocationRegion(player.getUniqueId());
@@ -117,7 +108,6 @@ public class LightManager {
     int lightLevel = source.getLightLevel(mainHand, offHand, helmet, chestplate, legging, boot);
     if (lightLevel > 0) {
       // plugin.getLogger().info("lightLevel > 0 " + lightLevel);
-      Location eyeLocation = player.getEyeLocation();
       Block bestBlock = getClosestAcceptableBlock(eyeLocation.getBlock());
       if (bestBlock == null) {
         this.removeLightFromLocationRegion(player.getUniqueId());

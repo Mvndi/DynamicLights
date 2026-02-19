@@ -1,3 +1,6 @@
+# 1.4.7
+Fix not using the same location for region scheduler & inside the region scheduler as player eye location.
+
 # 1.4.6
 Fix light removing
 
