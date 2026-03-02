@@ -5,6 +5,13 @@ import github.xCykrix.dynamicLights.command.DynamicLightsCommand;
 import github.xCykrix.dynamicLights.event.PlayerHandler;
 import github.xCykrix.dynamicLights.util.LightManager;
 import github.xCykrix.dynamicLights.util.LightSource;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.minimessage.translation.Argument;
+import net.kyori.adventure.text.serializer.ComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.md_5.bungee.chat.TextComponentSerializer;
+
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class DynamicLights extends JavaPlugin {
@@ -20,6 +27,7 @@ public final class DynamicLights extends JavaPlugin {
   // public static LanguageFile language;
   public static LightSource source;
   public static LightManager manager;
+  private Translations translations;
 
   // @Override
   protected void pre() {
@@ -34,9 +42,11 @@ public final class DynamicLights extends JavaPlugin {
 
     // save default config files
     saveDefaultConfig();
-    saveResource("language.yml", false);
     saveResource("lights.yml", false);
 
+    this.translations = new Translations();
+    translations.reload();
+    
 
     // Register Configurations
     // configuration.register(new Resource("config.yml", null, this.getResource("config.yml")))
@@ -66,10 +76,13 @@ public final class DynamicLights extends JavaPlugin {
     source.shutdown();
   }
 
-  public static String translate(String key) {
-    // TODO fix language file access & color interpretation
-    return key;
+  public static Component translate(String key) {
+    return Component.translatable(key, Argument.string("prefix", PlainTextComponentSerializer.plainText().serialize(Component.translatable("prefix"))));
   }
 
   public static DynamicLights getInstance() { return DynamicLights.getPlugin(DynamicLights.class); }
+
+  public Translations getTranslations() {
+    return translations;
+  }
 }

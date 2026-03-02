@@ -28,6 +28,7 @@ public class DynamicLightsCommand extends co.aikar.commands.BaseCommand {// exte
       // Objects.requireNonNull(DynamicLights.configuration.getYAMLFile("lights.yml")).reload();
       YamlConfiguration lights = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder(), "lights.yml"));
       DynamicLights.source.initialize();
+      DynamicLights.getInstance().getTranslations().reload();
       commandSender.sendMessage(DynamicLights.translate("reload"));
     } catch (NullPointerException ex) {
       commandSender.sendMessage(DynamicLights.translate("reload-error"));
