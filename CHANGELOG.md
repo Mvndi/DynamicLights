@@ -1,3 +1,6 @@
+# 1.5.0
+Fix translation & add French translation.
+
 # 1.4.7
 Fix not using the same location for region scheduler & inside the region scheduler as player eye location.
 

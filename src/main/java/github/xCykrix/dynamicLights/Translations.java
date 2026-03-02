@@ -36,11 +36,15 @@ public class Translations {
             }
         }
 
-        // create default en.yml if not exists
-        Path defaultLocaleFile = localeFolder.resolve("en.yml");
-        if (!Files.exists(defaultLocaleFile)) {
-            DynamicLights.getInstance().saveResource("locale/en.yml", false);
-        }
+        // create default translation if not exists
+        Locale.availableLocales().forEach(locale -> {
+            String languageKey = locale.toString();
+            Path defaultLocaleFile = localeFolder.resolve(languageKey + ".yml");
+            String outLocalePath = "locale/" + languageKey + ".yml";
+            if (!Files.exists(defaultLocaleFile) && DynamicLights.getInstance().getResource(outLocalePath) != null) {
+                DynamicLights.getInstance().saveResource(outLocalePath, false);
+            }
+        });
 
         List<Locale> registered = new ArrayList<>(1);
         registered.add(Locale.ENGLISH);
@@ -57,6 +61,7 @@ public class Translations {
                 Locale locale = Locale.forLanguageTag(localeName);
                 if (locale != null) load(locale);
                 registered.add(locale);
+                DynamicLights.getInstance().getLogger().info("Loaded locale: " + localeName);
             });
         } catch (Exception e) {
             e.printStackTrace();
@@ -73,6 +78,11 @@ public class Translations {
                 return;
             }
 
+            // Do not save language for each country, just save the country less version.
+            if(!locale.getLanguage().equals(locale.toString())) {
+                return;
+            }
+
             storage.registerAll(locale, english);
         });
 
@@ -86,6 +96,7 @@ public class Translations {
 
     public Component translate(TranslatableComponent component, Locale locale) {
         Component c = storage.translate(component, locale);
+        DynamicLights.getInstance().getLogger().info("Translated: " + component.toString() + " -> " + c.toString());
         return c == null ? storage.translate(component, Locale.ENGLISH) : c;
     }
 

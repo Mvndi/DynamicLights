@@ -6,12 +6,8 @@ import github.xCykrix.dynamicLights.event.PlayerHandler;
 import github.xCykrix.dynamicLights.util.LightManager;
 import github.xCykrix.dynamicLights.util.LightSource;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.minimessage.translation.Argument;
-import net.kyori.adventure.text.serializer.ComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import net.md_5.bungee.chat.TextComponentSerializer;
-
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class DynamicLights extends JavaPlugin {
@@ -69,6 +65,12 @@ public final class DynamicLights extends JavaPlugin {
 
   @Override
   public void onEnable() { initialize(); }
+
+  @Override
+  public void reloadConfig() {
+    super.reloadConfig();
+    translations.reload();
+  }
 
   // @Override
   public void shutdown() {

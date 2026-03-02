@@ -1,0 +1,23 @@
+###
+# Language File - Adventure API MiniMessage
+#
+# I recommend backing up this file in the event an update causes translations to be reset.
+#
+# General: https://docs.advntr.dev/minimessage/index.html
+# Formatting: https://docs.advntr.dev/minimessage/format.html#minimessage-format
+#
+# Realtime Editor: https://webui.advntr.dev/
+###
+
+###
+# Used as the Plugin's Chat and Console Prefix. Available in all "language." components as "<prefix>".
+###
+prefix: "<dark_gray>[</dark_gray><gold>DynamicLights</gold><dark_gray>]</dark_gray>"
+
+prevent-block-place: "<prefix> <gray>Le mode de verrouillage des sources lumineuses est actuellement activé. Vous devez vous accroupir pour placer des sources lumineuses depuis votre main secondaire. Ce mode peut être désactivé avec la commande « /dl lock ».</gray>"
+enable-lock: "<prefix> <gray>Mode de verrouillage lumineux activé.</gray>"
+disable-lock: "<prefix> <gray>Mode de verrouillage lumineux désactivé.</gray>"
+toggle-on: "<prefix> <gray>Rendu de la lumière activé.</gray>"
+toggle-off: "<prefix> <gray>Rendu de la lumière désactivé.</gray>"
+reload: "<prefix> <gray>Configuration lights.yml rechargée.</gray>"
+reload-error: "<prefix> <red>Échec du rechargement de la configuration lights.yml. Consultez la console.</red><gray>.</gray>"
