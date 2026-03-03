@@ -1,10 +1,13 @@
 package github.xCykrix.dynamicLights.event;
 
 import github.xCykrix.dynamicLights.DynamicLights;
+import github.xCykrix.dynamicLights.util.PlayerUtil;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -22,21 +25,26 @@ public class PlayerHandler implements Listener {
       if (!DynamicLights.source.isProtectedLight(event.getItemInHand().getType())) {
         return;
       }
-      if (DynamicLights.manager.locks.getOrDefault(event.getPlayer().getUniqueId().toString(), DynamicLights.manager.toggle)) {
+      if (PlayerUtil.getLockStatus(event.getPlayer())) {
         event.getPlayer().sendMessage(DynamicLights.translate("prevent-block-place"));
         event.setCancelled(true);
       }
     }
   }
 
-  // No need we do it for each online player
-  // @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-  // public void onPlayerJoinEvent(PlayerJoinEvent event) {
-  // DynamicLights.manager.addPlayer(event.getPlayer());
-  // }
-
   @EventHandler(priority = EventPriority.MONITOR)
   public void onPlayerQuitEvent(PlayerQuitEvent event) {
-    DynamicLights.manager.removeLightFromLocationRegion(event.getPlayer().getUniqueId());
+    DynamicLights.manager.removePlayerLightEnabled(event.getPlayer().getUniqueId());
+    // DynamicLights.manager.removeLightFromLocationRegion(event.getPlayer().getUniqueId());
+  }
+
+  @EventHandler(ignoreCancelled = true)
+  public void onPlayerGameModeChangeEvent(PlayerGameModeChangeEvent event) {
+    DynamicLights.manager.updatePlayerState(event.getPlayer(), event.getNewGameMode());
+  }
+
+  @EventHandler
+  public void onPlayerJoinEvent(PlayerJoinEvent event) {
+    DynamicLights.manager.updatePlayerState(event.getPlayer(), event.getPlayer().getGameMode());
   }
 }

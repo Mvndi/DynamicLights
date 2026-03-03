@@ -1,13 +1,12 @@
 package github.xCykrix.dynamicLights.util;
 
 import github.xCykrix.dynamicLights.DynamicLights;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -25,38 +24,38 @@ public class LightManager {
   private final LightSource source;
   private final Map<UUID, Location> lastLightLocation = new ConcurrentHashMap<>(200);
 
-  public final ConcurrentMap<String, Boolean> toggles;
-  public final ConcurrentMap<String, Boolean> locks;
-  private final long refresh;
-  public final boolean toggle;
+  private final Set<UUID> playerLightEnabled;
 
   private JavaPlugin plugin;
 
   public LightManager(JavaPlugin plugin) {
     this.plugin = plugin;
-    // YamlDocument config = DynamicLights.configuration.getYAMLFile("config.yml");
-    // if (config == null) {
-    // throw new RuntimeException("config.yml is corrupted or contains invalid formatting. Failed to load plugin.");
-    // }
-
     this.source = DynamicLights.source;
-    // TODO reenable file storing of toggles & locks
-    // this.toggles = DynamicLights.h2.get().openMap("lightToggleStatus");
-    // this.locks = DynamicLights.h2.get().openMap("lightLockStatus");
-    this.toggles = new ConcurrentHashMap<>();
-    this.locks = new ConcurrentHashMap<>();
-    this.refresh = plugin.getConfig().getLong("update-rate");
-    this.toggle = plugin.getConfig().getBoolean("default-toggle-state");
 
-    // this.lights = Collections.synchronizedList(new LinkedList<>());
+    playerLightEnabled = ConcurrentHashMap.newKeySet();
 
-    Bukkit.getAsyncScheduler().runAtFixedRate(plugin, st -> tick(), 0L, refresh, TimeUnit.MILLISECONDS);
+    Bukkit.getAsyncScheduler().runAtFixedRate(plugin, st -> tick(), 0L, plugin.getConfig().getLong("update-rate"), TimeUnit.MILLISECONDS);
   }
 
 
   // @Override
   public void shutdown() { clearAllLights(); }
 
+  public void addPlayerLightEnabled(UUID uuid) { playerLightEnabled.add(uuid); }
+
+  public void removePlayerLightEnabled(UUID uuid) { playerLightEnabled.remove(uuid); }
+
+  public boolean isPlayerLightEnabled(UUID uuid) { return playerLightEnabled.contains(uuid); }
+
+  // Player emit light if (SURVIVAL or ADVENTURE) and they have it enabled.
+  public void updatePlayerState(Player player, GameMode mode) {
+    if ((mode == GameMode.SURVIVAL || mode == GameMode.ADVENTURE) && PlayerUtil.getToggleStatus(player)) {
+      addPlayerLightEnabled(player.getUniqueId());
+    } else {
+      removePlayerLightEnabled(player.getUniqueId());
+      // removeLightFromLocationRegion(player.getUniqueId());
+    }
+  }
 
   public void tick() {
     if (!plugin.isEnabled()) {
@@ -64,13 +63,20 @@ public class LightManager {
       return;
     }
 
-    // For each online player, check if we should add a light or move the existing one
-    Collection<? extends Player> players = Bukkit.getOnlinePlayers();
-    for (Player targetPlayer : players) {
-      updatePlayerLight(targetPlayer);
+    // For each online player that have the right game mode, check if we should add a light or move the existing one
+    for (UUID targetPlayerUUID : playerLightEnabled) {
+      updatePlayerLight(Bukkit.getPlayer(targetPlayerUUID));
     }
 
-    // Removing player light when the player quit is now done in player quit event.
+    // Remove each light that should not be there
+    // With a short delay between each tick(), the light is added back when removed from somewhere else,
+    // so we need to remove it after the main for loop.
+    // It might call to remove the light many time if the region scheduler is not fast enough, but it's fine I guess.
+    for (UUID targetPlayerUUID : lastLightLocation.keySet()) {
+      if (!playerLightEnabled.contains(targetPlayerUUID)) {
+        this.removeLightFromLocationRegion(targetPlayerUUID);
+      }
+    }
   }
 
   public void clearAllLights() {
@@ -88,17 +94,6 @@ public class LightManager {
    * Find the best location to place a light and update the light if needed.
    */
   private Optional<Location> updateLightToNewLocation(Player player, Location eyeLocation) {
-    if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
-      // plugin.getLogger().info("creative or spectator");
-      this.removeLightFromLocationRegion(player.getUniqueId());
-      return Optional.empty();
-    }
-    if (!(this.toggles.getOrDefault(player.getUniqueId().toString(), this.toggle))) {
-      this.removeLightFromLocationRegion(player.getUniqueId());
-      return Optional.empty();
-    }
-
-
     Material mainHand = getMaterialOrAir(player.getInventory().getItemInMainHand());
     Material offHand = getMaterialOrAir(player.getInventory().getItemInOffHand());
     Material helmet = getMaterialOrAir(player.getInventory().getHelmet());
@@ -201,7 +196,8 @@ public class LightManager {
         }
       }
     }
-    // Remove only if its the current last location, else we want to keep that value to remove it later when we will have to remove the light.
+    // Remove only if its the current last location, else we want to keep that value to remove it later when we will have to remove the
+    // light.
     lastLightLocation.remove(playerUuid, location);
     // DynamicLights.getInstance().getLogger().info("Removed light at " + location);
   }

@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import github.xCykrix.dynamicLights.DynamicLights;
+import github.xCykrix.dynamicLights.util.PlayerUtil;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -15,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 @CommandAlias("dynamiclights|dynamiclight|dl")
 public class DynamicLightsCommand extends co.aikar.commands.BaseCommand {// extends DevkitSimpleState {
+
 
   private static JavaPlugin plugin;
 
@@ -52,15 +54,13 @@ public class DynamicLightsCommand extends co.aikar.commands.BaseCommand {// exte
   @CommandPermission("dynamiclights.toggle")
   public static void onToggle(CommandSender commandSender) {
     if (commandSender instanceof Player player) {
-      String uuid = player.getUniqueId().toString();
-      boolean current = DynamicLights.manager.toggles.getOrDefault(uuid, DynamicLights.manager.toggle);
-      if (!current) {
-        player.sendMessage(DynamicLights.translate("toggle-on"));
-        DynamicLights.manager.toggles.put(uuid, true);
-      } else {
+      if (PlayerUtil.getToggleStatus(player)) {
         player.sendMessage(DynamicLights.translate("toggle-off"));
-        DynamicLights.manager.toggles.put(uuid, false);
+      } else {
+        player.sendMessage(DynamicLights.translate("toggle-on"));
       }
+
+      PlayerUtil.switchToggleStatus(player);
     }
   }
 
@@ -69,15 +69,13 @@ public class DynamicLightsCommand extends co.aikar.commands.BaseCommand {// exte
   @CommandPermission("dynamiclights.lock")
   public static void onLock(CommandSender commandSender) {
     if (commandSender instanceof Player player) {
-      String uuid = player.getUniqueId().toString();
-      boolean current = DynamicLights.manager.locks.getOrDefault(uuid, true);
-      if (!current) {
-        player.sendMessage(DynamicLights.translate("enable-lock"));
-        DynamicLights.manager.locks.put(uuid, true);
+      if (PlayerUtil.getLockStatus(player)) {
+        player.sendMessage(DynamicLights.translate("lock-off"));
       } else {
-        player.sendMessage(DynamicLights.translate("disable-lock"));
-        DynamicLights.manager.locks.put(uuid, false);
+        player.sendMessage(DynamicLights.translate("lock-on"));
       }
+
+      PlayerUtil.switchLockStatus(player);
     }
   }
 }
