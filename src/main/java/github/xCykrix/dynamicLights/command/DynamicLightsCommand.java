@@ -70,12 +70,26 @@ public class DynamicLightsCommand extends co.aikar.commands.BaseCommand {// exte
   public static void onLock(CommandSender commandSender) {
     if (commandSender instanceof Player player) {
       if (PlayerUtil.getLockStatus(player)) {
-        player.sendMessage(DynamicLights.translate("lock-off"));
+        player.sendMessage(DynamicLights.translate("disable-lock"));
       } else {
-        player.sendMessage(DynamicLights.translate("lock-on"));
+        player.sendMessage(DynamicLights.translate("enable-lock"));
       }
 
       PlayerUtil.switchLockStatus(player);
+    }
+  }
+  @Subcommand("lockverbose")
+  @Description("Make the warning lock message go away")
+  @CommandPermission("dynamiclights.lock")
+  public static void onLockVerbose(CommandSender commandSender) {
+    if (commandSender instanceof Player player) {
+      if (PlayerUtil.getLockStatus(player)) {
+        player.sendMessage(DynamicLights.translate("disable-lock-verbose"));
+      } else {
+        player.sendMessage(DynamicLights.translate("enable-lock-verbose"));
+      }
+
+      PlayerUtil.switchLockVerboseStatus(player);
     }
   }
 }

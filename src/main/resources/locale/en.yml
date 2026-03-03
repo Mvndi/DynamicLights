@@ -14,9 +14,11 @@
 ###
 prefix: "<dark_gray>[</dark_gray><gold>DynamicLights</gold><dark_gray>]</dark_gray>"
 
-prevent-block-place: "<prefix> <gray>Light locking mode is currently enabled. You must sneak to place light sources from your Off Hand. This can be toggled with \"/dl lock\".</gray>"
+prevent-block-place: "<prefix> <gray>Light locking mode is currently enabled. You must sneak to place light sources from your Off Hand. This can be toggled with \"/dl lock\". (Disable this message with \"/dl lockverbose\".)</gray>"
 enable-lock: "<prefix> <gray>Enabled light lock mode.</gray>"
 disable-lock: "<prefix> <gray>Disabled light lock mode.</gray>"
+enable-lock-verbose: "<prefix> <gray>Enabled light lock mode warning message.</gray>"
+disable-lock-verbose: "<prefix> <gray>Disabled light lock mode warning message.</gray>"
 toggle-on: "<prefix> <gray>Light rendering enabled.</gray>"
 toggle-off: "<prefix> <gray>Light rendering disabled.</gray>"
 reload: "<prefix> <gray>Reloaded lights.yml configuration.</gray>"

@@ -26,7 +26,11 @@ public class PlayerHandler implements Listener {
         return;
       }
       if (PlayerUtil.getLockStatus(event.getPlayer())) {
-        event.getPlayer().sendMessage(DynamicLights.translate("prevent-block-place"));
+        // send a text to the player to explain why the block place event was cancelled
+        if (PlayerUtil.getLockVerboseStatus(event.getPlayer())) {
+          event.getPlayer().sendMessage(DynamicLights.translate("prevent-block-place"));
+        }
+        // cancel the event
         event.setCancelled(true);
       }
     }
