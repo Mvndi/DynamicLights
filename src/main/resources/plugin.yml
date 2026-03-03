@@ -12,7 +12,7 @@ folia-supported: true
 permissions:
   dynamiclights.lock:
     description: "Toggle placing light sources from your off hand."
-    default: false
+    default: true
   dynamiclights.toggle:
     description: "Toggle rendering of light sources for your client."
     default: true
