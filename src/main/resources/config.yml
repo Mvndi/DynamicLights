@@ -7,6 +7,9 @@ default-toggle-state: true
 # Default Locking State: Controls if player's offhand are automatically locked by default.
 default-lock-state: false
 
+# Default warn player when locked that they can unlock it with a command.
+default-lock-verbose-state: true
+
 # DO NOT EDIT THE VERSION. Manual edits may corrupt or reset configuration files.
 #
 version: 3

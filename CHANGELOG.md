@@ -1,3 +1,8 @@
+# 1.6.0
+Improve performances.
+Save user settings on the Minecraft world.
+Add an option to disable the light lock message.
+
 # 1.5.0
 Fix translation & add French translation.
 
