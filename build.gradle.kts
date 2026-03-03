@@ -43,6 +43,12 @@ tasks.named<ShadowJar>("shadowJar") {
     archiveClassifier = null;
 }
 
+publishing {
+    publications.create<MavenPublication>("maven") {
+        from(components["java"])
+    }
+}
+
 tasks {
     assemble {
         dependsOn(shadowJar)
@@ -78,3 +84,83 @@ java {
         toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
     }
 }
+
+tasks.register("echoVersion") {
+    group = "documentation"
+    description = "Displays the version."
+    doLast {
+        println("${project.version}")
+    }
+}
+
+tasks.register("echoReleaseName") {
+    group = "documentation"
+    description = "Displays the release name."
+    doLast {
+        println("${project.version} [${supportedMinecraftVersions}]")
+    }
+}
+
+val extractChangelog = tasks.register("extractChangelog") {
+    group = "documentation"
+    description = "Extracts the changelog for the current project version from CHANGELOG.md, including the version header."
+
+    val changelog: Property<String> = project.objects.property(String::class)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        val version = project.version.toString()
+        val changelogFile = project.file("CHANGELOG.md")
+
+        if (!changelogFile.exists()) {
+            println("CHANGELOG.md not found.")
+            changelog.set("No changelog found.")
+            return@doLast
+        }
+
+        val lines = changelogFile.readLines()
+        val entries = mutableListOf<String>()
+        var foundVersion = false
+
+        for (line in lines) {
+            when {
+                // Include the version line itself
+                line.trim().equals("# $version", ignoreCase = true) -> {
+                    foundVersion = true
+                    entries.add(line)
+                }
+                // Stop collecting at the next version header
+                foundVersion && line.trim().startsWith("# ") -> break
+                // Collect lines after the version header
+                foundVersion -> entries.add(line)
+            }
+        }
+
+        val result = if (entries.isEmpty()) {
+            "Update to $version."
+        } else {
+            entries.joinToString("\n").trim()
+        }
+
+        // println("Changelog for version $version:\n$result")
+        changelog.set(result)
+    }
+
+    // Make changelog accessible from other tasks
+    extensions.add(Property::class.java, "changelog", changelog)
+}
+
+tasks.register("echoLatestVersionChangelog") {
+    group = "documentation"
+    description = "Displays the latest version change."
+
+    dependsOn(tasks.named("extractChangelog"))
+
+    doLast {
+        println((extractChangelog.get().extensions.findByType(Property::class.java) as Property<String>).get())
+    }
+}
+
+
+val versionString: String = version as String
+val isRelease: Boolean = !versionString.contains("SNAPSHOT")
