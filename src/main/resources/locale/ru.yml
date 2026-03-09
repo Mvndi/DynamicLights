@@ -1,0 +1,25 @@
+###
+# Language File - Adventure API MiniMessage
+#
+# I recommend backing up this file in the event an update causes translations to be reset.
+#
+# General: https://docs.advntr.dev/minimessage/index.html
+# Formatting: https://docs.advntr.dev/minimessage/format.html#minimessage-format
+#
+# Realtime Editor: https://webui.advntr.dev/
+###
+
+###
+# Used as the Plugin's Chat and Console Prefix. Available in all "language." components as "<prefix>".
+###
+prefix: "<dark_gray>[</dark_gray><gold>DynamicLights</gold><dark_gray>]</dark_gray>"
+
+prevent-block-place: "<prefix> <gray>Сейчас включен режим блокировки света. Тебе нужно присесть (SHIFT), чтобы ставить источники света из левой руки. Это можно переключить командой \"/dl lock\". (Отключить это сообщение: \"/dl lockverbose\".)</gray>"
+enable-lock: "<prefix> <gray>Режим блокировки света включен.</gray>"
+disable-lock: "<prefix> <gray>Режим блокировки света выключен.</gray>"
+enable-lock-verbose: "<prefix> <gray>Предупреждения о блокировке света включены.</gray>"
+disable-lock-verbose: "<prefix> <gray>Предупреждения о блокировке света выключены.</gray>"
+toggle-on: "<prefix> <gray>Рендеринг света включен.</gray>"
+toggle-off: "<prefix> <gray>Рендеринг света выключен.</gray>"
+reload: "<prefix> <gray>Конфигурация lights.yml перезагружена.</gray>"
+reload-error: "<prefix> <red>Не удалось перезагрузить конфигурацию lights.yml. Проверь консоль.</red><gray>.</gray>"
