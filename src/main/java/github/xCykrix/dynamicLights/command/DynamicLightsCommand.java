@@ -61,6 +61,7 @@ public class DynamicLightsCommand extends co.aikar.commands.BaseCommand {// exte
       }
 
       PlayerUtil.switchToggleStatus(player);
+      DynamicLights.manager.updatePlayerState(player, player.getGameMode());
     }
   }
 

@@ -1,3 +1,6 @@
+# 1.6.2
+Fix `/dl toogle` updating the light.
+
 # 1.6.1
 Fix a NullPointerException
 
