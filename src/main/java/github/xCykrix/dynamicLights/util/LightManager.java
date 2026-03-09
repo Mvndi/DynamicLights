@@ -65,7 +65,7 @@ public class LightManager {
 
     // For each online player that have the right game mode, check if we should add a light or move the existing one
     for (UUID targetPlayerUUID : playerLightEnabled) {
-      updatePlayerLight(Bukkit.getPlayer(targetPlayerUUID));
+      updatePlayerLight(targetPlayerUUID);
     }
 
     // Remove each light that should not be there
@@ -85,9 +85,14 @@ public class LightManager {
     }
   }
 
-  public void updatePlayerLight(Player player) {
-    Location playerLocation = player.getEyeLocation();
-    Bukkit.getRegionScheduler().run(plugin, playerLocation, st -> updateLightToNewLocation(player, playerLocation));
+  public void updatePlayerLight(UUID targetPlayerUUID) {
+    Player player = Bukkit.getPlayer(targetPlayerUUID);
+    if (player == null) {
+      removeLightFromLocationRegion(targetPlayerUUID);
+    } else {
+      Location playerLocation = player.getEyeLocation();
+      Bukkit.getRegionScheduler().run(plugin, playerLocation, st -> updateLightToNewLocation(player, playerLocation));
+    }
   }
 
   /**

@@ -1,3 +1,6 @@
+# 1.6.1
+Fix a NullPointerException
+
 # 1.6.0
 Improve performances.
 Save user settings on the Minecraft world.

@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "github.xCykrix"
-version = "1.6.0"
+version = "1.6.1"
 description="Dynamic Lights for Minecraft Servers without requiring Modding."
 val mainMinecraftVersion = "1.21.11"
 val supportedMinecraftVersions = "1.21.11 - 1.21.11"
