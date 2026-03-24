@@ -6,6 +6,7 @@ plugins {
     id("java-library")
     `maven-publish`
     id("xyz.jpenilla.run-paper") version "2.3.1"
+    id("org.sonarqube") version "7.2.3.7755"
 }
 
 group = "github.xCykrix"
@@ -37,6 +38,14 @@ dependencies {
     //     isTransitive = false
     // }
     implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
+}
+
+sonar {
+  properties {
+    property("sonar.projectKey", project.name)
+    property("sonar.projectName", project.name)
+    property("sonar.host.url", "https://mvndisonar.formiko.fr")
+  }
 }
 
 // Shadow Task
