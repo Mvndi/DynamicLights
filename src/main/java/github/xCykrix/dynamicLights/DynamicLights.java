@@ -82,7 +82,7 @@ public final class DynamicLights extends JavaPlugin {
     return Component.translatable(key, Argument.string("prefix", PlainTextComponentSerializer.plainText().serialize(Component.translatable("prefix"))));
   }
 
-  public static DynamicLights getInstance() { return DynamicLights.getPlugin(DynamicLights.class); }
+  public static DynamicLights getInstance() { return getPlugin(DynamicLights.class); }
 
   public Translations getTranslations() {
     return translations;

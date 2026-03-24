@@ -53,7 +53,6 @@ public class LightManager {
       addPlayerLightEnabled(player.getUniqueId());
     } else {
       removePlayerLightEnabled(player.getUniqueId());
-      // removeLightFromLocationRegion(player.getUniqueId());
     }
   }
 
@@ -114,10 +113,6 @@ public class LightManager {
         return Optional.empty();
       }
       Location bestBlockLocation = bestBlock.getLocation();
-      if (bestBlockLocation == null) {
-        this.removeLightFromLocationRegion(player.getUniqueId());
-        return Optional.empty();
-      }
 
       // Update the light in Minecraft & int lastLightLocation
       Location last = lastLightLocation.getOrDefault(player.getUniqueId(), null);
@@ -187,7 +182,6 @@ public class LightManager {
   }
 
   private void removeLight(UUID playerUuid, Location location) {
-    // Location location = lastLightLocation.get(playerUuid);
     if (location != null) {
       World world = location.getWorld();
       if (world != null) {

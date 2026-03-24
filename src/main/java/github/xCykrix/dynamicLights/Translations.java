@@ -1,6 +1,12 @@
 package github.xCykrix.dynamicLights;
 
 import com.google.common.collect.Maps;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -10,13 +16,6 @@ import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.codehaus.plexus.util.FileUtils;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 public class Translations {
     private final Path localeFolder = DynamicLights.getInstance().getDataPath().resolve("locale");
@@ -31,7 +30,7 @@ public class Translations {
             try {
                 Files.createDirectories(localeFolder);
             } catch (Exception e) {
-                e.printStackTrace();
+                DynamicLights.getInstance().getLogger().severe("Failed to create locale folder.");
                 return;
             }
         }
@@ -64,7 +63,7 @@ public class Translations {
                 DynamicLights.getInstance().getLogger().info("Loaded locale: " + localeName);
             });
         } catch (Exception e) {
-            e.printStackTrace();
+            DynamicLights.getInstance().getLogger().severe("Failed to load locales.");
         }
 
         Map<String, String> english = getEnglishKeys();
@@ -96,7 +95,7 @@ public class Translations {
 
     public Component translate(TranslatableComponent component, Locale locale) {
         Component c = storage.translate(component, locale);
-        DynamicLights.getInstance().getLogger().info("Translated: " + component.toString() + " -> " + c.toString());
+        DynamicLights.getInstance().getLogger().info(() -> "Translated: " + component.toString() + " -> " + (c == null ? "null" : c.toString()));
         return c == null ? storage.translate(component, Locale.ENGLISH) : c;
     }
 
@@ -106,7 +105,7 @@ public class Translations {
             try {
                 Files.createFile(localeFile);
             } catch (Exception e) {
-                e.printStackTrace();
+                DynamicLights.getInstance().getLogger().severe("Failed to create locale file.");
                 return;
             }
         }

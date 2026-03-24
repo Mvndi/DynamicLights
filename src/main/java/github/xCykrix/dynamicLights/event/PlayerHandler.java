@@ -39,7 +39,6 @@ public class PlayerHandler implements Listener {
   @EventHandler(priority = EventPriority.MONITOR)
   public void onPlayerQuitEvent(PlayerQuitEvent event) {
     DynamicLights.manager.removePlayerLightEnabled(event.getPlayer().getUniqueId());
-    // DynamicLights.manager.removeLightFromLocationRegion(event.getPlayer().getUniqueId());
   }
 
   @EventHandler(ignoreCancelled = true)

@@ -1,18 +1,20 @@
 package github.xCykrix.dynamicLights.util;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class LightSource {
-  private final HashMap<Material, Integer> levelOfLights = new HashMap<>();
-  private final HashSet<Material> submersibleLights = new HashSet<>();
-  private final HashSet<Material> lockedLights = new HashSet<>();
+  private final Map<Material, Integer> levelOfLights = new EnumMap<>(Material.class);
+  private final Set<Material> submersibleLights = new HashSet<>();
+  private final Set<Material> lockedLights = new HashSet<>();
 
   private final JavaPlugin plugin;
 
@@ -79,26 +81,15 @@ public class LightSource {
 
   public boolean hasLightLevel(Material material) { return levelOfLights.containsKey(material); }
 
-  public Integer getLightLevel(Material mainHand, Material offHand, Material helmet, Material chestplate, Material legging, Material boot) {
-    int level = 0;
-    level = levelOfLights.getOrDefault(boot, level);
-    level = levelOfLights.getOrDefault(legging, level);
-    level = levelOfLights.getOrDefault(chestplate, level);
-    level = levelOfLights.getOrDefault(helmet, level);
-    level = levelOfLights.getOrDefault(offHand, level);
-    level = levelOfLights.getOrDefault(mainHand, level);
-    return level;
-  }
+  public int getLightLevel(Material... materials) {
+    return Arrays.stream(materials)
+        .mapToInt(mat -> levelOfLights.getOrDefault(mat, 0))
+        .max()
+        .orElse(0);
+}
 
-  public boolean isSubmersible(Material mainHand, Material offHand, Material helmet, Material chestplate, Material legging, Material boot) {
-    boolean submersible = false;
-    submersible = submersibleLights.contains(boot) ? true : submersible;
-    submersible = submersibleLights.contains(legging) ? true : submersible;
-    submersible = submersibleLights.contains(chestplate) ? true : submersible;
-    submersible = submersibleLights.contains(helmet) ? true : submersible;
-    submersible = submersibleLights.contains(offHand) ? true : submersible;
-    submersible = submersibleLights.contains(mainHand) ? true : submersible;
-    return submersible;
+  public boolean isSubmersible(Material... materials) {
+    return Arrays.stream(materials).anyMatch(submersibleLights::contains);
   }
 
   public boolean isProtectedLight(Material offHand) { return lockedLights.contains(offHand); }

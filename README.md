@@ -2,6 +2,9 @@
 
 Emit Light from Held Items using the 1.17 Light Blocks in Paper Servers.
 
+This fork create the light for real instead of sending a block change packet. This has a real impact on the server as snow melting and works no matter what distance the players are from each other.
+It also support Folia.
+
 Discord: https://discord.gg/RHJQFPgbke
 
 ## Usage/Examples
