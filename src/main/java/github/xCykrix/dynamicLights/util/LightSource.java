@@ -45,7 +45,7 @@ public class LightSource {
         this.plugin.getLogger().warning("Unable to register level for '" + materialString + "'. " + exception.getMessage());
       }
     }
-    this.plugin.getLogger().info("Registered " + this.levelOfLights.size() + " items for Dynamic Lights.");
+    this.plugin.getLogger().info(() -> "Registered " + this.levelOfLights.size() + " items for Dynamic Lights.");
 
     // Register Submersible Lights
     this.submersibleLights.clear();
@@ -57,7 +57,7 @@ public class LightSource {
         this.plugin.getLogger().warning("Unable to register submersible for '" + material + "'. " + exception.getMessage());
       }
     }
-    this.plugin.getLogger().info("Registered " + this.submersibleLights.size() + " items for Dynamic Submersible Lights.");
+    this.plugin.getLogger().info(() -> "Registered " + this.submersibleLights.size() + " items for Dynamic Submersible Lights.");
 
     // Register Lockable Lights
     this.lockedLights.clear();
@@ -69,7 +69,7 @@ public class LightSource {
         this.plugin.getLogger().warning("Unable to register lockable for '" + material + "'. " + exception.getMessage());
       }
     }
-    this.plugin.getLogger().info("Registered " + this.lockedLights.size() + " items for Dynamic Locked Lights.");
+    this.plugin.getLogger().info(() -> "Registered " + this.lockedLights.size() + " items for Dynamic Locked Lights.");
   }
 
   // @Override

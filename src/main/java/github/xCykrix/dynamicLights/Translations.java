@@ -60,7 +60,7 @@ public class Translations {
                 Locale locale = Locale.forLanguageTag(localeName);
                 if (locale != null) load(locale);
                 registered.add(locale);
-                DynamicLights.getInstance().getLogger().info("Loaded locale: " + localeName);
+                DynamicLights.getInstance().getLogger().info(() -> "Loaded locale: " + localeName);
             });
         } catch (Exception e) {
             DynamicLights.getInstance().getLogger().severe("Failed to load locales.");
